@@ -1,3 +1,4 @@
+import 'package:PiliPlus/utils/gnome_theme.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
@@ -105,7 +106,12 @@ class _SettingPageState extends State<SettingPage> {
                 children: [
                   Expanded(
                     flex: 4,
-                    child: _buildList(theme),
+                    child: GnomeTheme.enabled
+                        ? Material(
+                            color: theme.colorScheme.surfaceContainer,
+                            child: _buildList(theme),
+                          )
+                        : _buildList(theme),
                   ),
                   VerticalDivider(
                     width: 1,
@@ -165,7 +171,11 @@ class _SettingPageState extends State<SettingPage> {
     if (_isPortrait) {
       return null;
     } else {
-      return type == _type ? theme.colorScheme.onInverseSurface : null;
+      return type == _type
+          ? (GnomeTheme.enabled
+                ? theme.colorScheme.primary.withValues(alpha: .14)
+                : theme.colorScheme.onInverseSurface)
+          : null;
     }
   }
 
@@ -304,11 +314,13 @@ class _SettingPageState extends State<SettingPage> {
       bottom: 8,
     ),
     child: Material(
-      color: theme.colorScheme.onInverseSurface,
-      borderRadius: const BorderRadius.all(Radius.circular(50)),
+      color: GnomeTheme.enabled
+          ? theme.colorScheme.surfaceContainerLow
+          : theme.colorScheme.onInverseSurface,
+      borderRadius: BorderRadius.all(Radius.circular(GnomeTheme.enabled ? 6 : 50)),
       child: InkWell(
         onTap: () => Get.toNamed('/settingsSearch'),
-        borderRadius: const BorderRadius.all(Radius.circular(50)),
+        borderRadius: BorderRadius.all(Radius.circular(GnomeTheme.enabled ? 6 : 50)),
         child: const Padding(
           padding: EdgeInsets.symmetric(vertical: 8),
           child: Center(

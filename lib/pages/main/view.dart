@@ -1,3 +1,5 @@
+import 'package:PiliPlus/utils/gnome_theme.dart';
+import 'package:PiliPlus/utils/gnome_sidebar.dart';
 import 'dart:io';
 
 import 'package:PiliPlus/common/assets.dart';
@@ -407,6 +409,26 @@ class _MainAppState extends PopScopeState<MainApp>
   }
 
   Widget _sideBar() {
+    if (GnomeTheme.enabled && _mainController.navigationBars.length > 1) {
+      return Obx(
+        () => GnomeSidebar(
+          selectedIndex: _mainController.selectedIndex.value,
+          labels: _mainController.navigationBars.map((e) => e.label).toList(),
+          icons: _mainController.navigationBars
+              .map(
+                (e) => _buildIcon(
+                  type: e,
+                  selected:
+                      _mainController.navigationBars.indexOf(e) ==
+                      _mainController.selectedIndex.value,
+                ),
+              )
+              .toList(),
+          header: userAndSearchVertical(),
+          onSelected: _mainController.setIndex,
+        ),
+      );
+    }
     if (_mainController.navigationBars.length > 1) {
       if (context.isTablet && _mainController.optTabletNav) {
         return Padding(

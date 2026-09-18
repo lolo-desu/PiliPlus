@@ -1,3 +1,4 @@
+import 'package:PiliPlus/utils/gnome_theme.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/font_utils.dart';
@@ -166,9 +167,9 @@ abstract final class ThemeUtils {
       ),
     );
     if (isDark && Pref.isPureBlackTheme) {
-      return darkenTheme(theme);
+      return GnomeTheme.apply(darkenTheme(theme));
     }
-    return theme;
+    return GnomeTheme.apply(theme);
   }
 
   static ThemeData darkenTheme(ThemeData theme) {
