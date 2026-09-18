@@ -58,3 +58,13 @@ PiliPlus requires its upstream `lib/scripts/patch.ps1 Linux` framework and
 `material_ui` patches before analysis/build. A stock Flutter SDK alone is not a
 valid substitute. Local verification used isolated patched copies in `work/`;
 CI runs the existing upstream script on its disposable runner.
+
+## Page render previews
+
+These are renders of real application widgets in regression tests with isolated
+fixture data, not screenshots of a signed-in user session. Both light and dark
+screens are tested at narrow and wide widths.
+
+![Light GNOME presentation](docs/gnome/light.png)
+
+![Dark GNOME presentation](docs/gnome/dark.png)

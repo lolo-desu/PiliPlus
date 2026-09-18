@@ -46,9 +46,12 @@ void main() {
         }.entries) {
           final path = Platform.environment[entry.value];
           if (path != null) {
-            final loader = FontLoader(entry.key)..addFont(
-              Future.value(ByteData.sublistView(File(path).readAsBytesSync())),
-            );
+            final loader = FontLoader(entry.key)
+              ..addFont(
+                Future.value(
+                  ByteData.sublistView(File(path).readAsBytesSync()),
+                ),
+              );
             await tester.runAsync(loader.load);
           }
         }

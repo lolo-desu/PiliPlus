@@ -409,7 +409,10 @@ class _MainAppState extends PopScopeState<MainApp>
   }
 
   Widget _sideBar() {
-    if (GnomeTheme.enabled && _mainController.navigationBars.length > 1) {
+    if (GnomeTheme.enabled &&
+        context.isTablet &&
+        _mainController.optTabletNav &&
+        _mainController.navigationBars.length > 1) {
       return Obx(
         () => GnomeSidebar(
           selectedIndex: _mainController.selectedIndex.value,
