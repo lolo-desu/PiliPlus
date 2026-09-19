@@ -146,6 +146,82 @@ class NativeTests(unittest.TestCase):
             )
         )
 
+    def test_extended_feature_adapters_normalize_rows(self):
+        service = Service(None, self.store)
+        responses = {
+            "/x/web-interface/search/square": {
+                "trending": {"list": [{"keyword": "GTK"}]}
+            },
+            "/x/web-interface/ranking/v2": {"list": [{"bvid": "BV1", "title": "排行"}]},
+            "/x/v2/history/toview/web": {"list": [{"bvid": "BV2", "title": "稍后"}]},
+            "/xlive/web-interface/v1/webMain/getMoreRecList": {
+                "room_list": [{"roomid": 9, "title": "直播", "uname": "主播"}]
+            },
+            "/x/web-interface/nav": {"isLogin": True, "mid": 7},
+            "/x/relation/followings": {"list": [{"mid": 8, "uname": "关注者"}]},
+        }
+        service.request = lambda path, params=None, wbi=False: responses[path]
+        self.assertEqual(service.hot_keywords()[0]["title"], "GTK")
+        self.assertEqual(service.rank()[0]["id"], "BV1")
+        self.assertEqual(service.watch_later()[0]["id"], "BV2")
+        self.assertEqual(service.live()[0]["live_room_id"], 9)
+        self.assertEqual(service.following()[0]["member_id"], 8)
+
+    def test_live_and_account_feature_adapters(self):
+        service = Service(None, self.store)
+        service.request = lambda path, params=None, wbi=False: {
+            "/xlive/web-room/v2/index/getRoomPlayInfo": {
+                "playurl_info": {
+                    "playurl": {
+                        "stream": [
+                            {
+                                "format": [
+                                    {
+                                        "codec": [
+                                            {
+                                                "base_url": "/live.m3u8",
+                                                "url_info": [
+                                                    {
+                                                        "host": "https://cdn.example",
+                                                        "extra": "?token=x",
+                                                    }
+                                                ],
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            "/x/web-interface/nav": {"isLogin": True, "mid": 7},
+            "/x/web-interface/history/cursor": {
+                "list": [{"bvid": "BV3", "title": "历史"}]
+            },
+            "/x/space/bangumi/follow/list": {
+                "list": [{"season_id": 99, "title": "追番"}]
+            },
+        }[path]
+        value = service.live_play(
+            {"id": "live:9", "url": "https://live.bilibili.com/9"}
+        )
+        self.assertEqual(value["url"], "https://cdn.example/live.m3u8?token=x")
+        self.assertEqual(service.history_remote()[0]["id"], "BV3")
+        self.assertEqual(service.subscriptions()[0]["id"], "ss99")
+
+    def test_member_detail_contains_profile_and_video_rows(self):
+        service = Service(None, self.store)
+        service.request = lambda path, params=None, wbi=False: {
+            "/x/space/wbi/acc/info": {"card": {"name": "UP", "sign": "简介"}},
+            "/x/space/wbi/arc/search": {
+                "list": {"vlist": [{"bvid": "BV4", "title": "投稿"}]}
+            },
+        }[path]
+        value = service.member_detail({"id": "member:8", "title": "UP"})
+        self.assertEqual(value["title"], "UP")
+        self.assertEqual(value["videos"][0]["id"], "BV4")
+
     def test_api_errors_are_not_empty_success(self):
         class Http:
             def json(self, *args, **kwargs):

@@ -134,6 +134,89 @@ class Service:
             ]
         return self.browse(page)
 
+    def hot_keywords(self):
+        """Return the current Bilibili search suggestions as plain GTK rows."""
+        data = self.request("/x/web-interface/search/square")
+        rows = data.get("trending", {}).get("list") or data.get("list") or []
+        result = []
+        for row in rows:
+            word = row.get("keyword") or row.get("show_name") or row.get("word")
+            if word:
+                result.append(
+                    {
+                        "id": "hot:" + word,
+                        "title": word,
+                        "subtitle": "热门搜索",
+                        "url": "https://search.bilibili.com/all?keyword="
+                        + urllib.parse.quote(word),
+                    }
+                )
+        return result
+
+    def rank(self, page=1):
+        data = self.request("/x/web-interface/ranking/v2", {"rid": 0, "type": "all"})
+        rows = data.get("list", [])
+        return [self.item(x) for x in rows[(page - 1) * 30 : page * 30]]
+
+    def watch_later(self, page=1):
+        data = self.request("/x/v2/history/toview/web", {"pn": page, "ps": 30})
+        rows = data.get("list") or data.get("data", {}).get("list") or []
+        return [self.item(x) for x in rows if x.get("bvid") or x.get("aid")]
+
+    def live(self, page=1):
+        data = self.request(
+            "/xlive/web-interface/v1/webMain/getMoreRecList",
+            {"platform": "web", "page": page, "page_size": 30},
+        )
+        rows = (
+            data.get("room_list")
+            or data.get("list")
+            or data.get("recommend_room_list")
+            or []
+        )
+        result = []
+        for row in rows:
+            room = row.get("room_info") or row
+            identifier = room.get("room_id") or room.get("roomid") or room.get("id")
+            if not identifier:
+                continue
+            title = html.unescape(re.sub("<[^>]+>", "", room.get("title", "直播间")))
+            result.append(
+                {
+                    "id": "live:" + str(identifier),
+                    "title": title,
+                    "cover": room.get("cover") or room.get("keyframe", ""),
+                    "subtitle": (room.get("uname") or room.get("anchor_name") or "")
+                    + " · 直播",
+                    "summary": room.get("area_name", ""),
+                    "url": "https://live.bilibili.com/" + str(identifier),
+                    "live_room_id": identifier,
+                }
+            )
+        return result
+
+    def following(self, page=1):
+        account = self.request("/x/web-interface/nav")
+        if not account.get("isLogin"):
+            raise ValueError("请先登录 Bilibili")
+        data = self.request(
+            "/x/relation/followings",
+            {"vmid": account["mid"], "pn": page, "ps": 30, "order": "attention"},
+        )
+        rows = data.get("list") or []
+        return [
+            {
+                "id": "member:" + str(row.get("mid")),
+                "title": row.get("uname", "未知用户"),
+                "subtitle": row.get("sign", ""),
+                "cover": row.get("face", ""),
+                "url": "https://space.bilibili.com/" + str(row.get("mid")),
+                "member_id": row.get("mid"),
+            }
+            for row in rows
+            if row.get("mid")
+        ]
+
     def dynamics(self):
         data = self.request("/x/polymer/web-dynamic/v1/feed/all", {"type": "video"})
         result = []
@@ -182,6 +265,28 @@ class Service:
             )
             for day in result
         ]
+
+    def member_detail(self, item):
+        member_id = item.get("member_id") or str(item.get("id", "")).removeprefix(
+            "member:"
+        )
+        info = self.request("/x/space/wbi/acc/info", {"mid": member_id}, wbi=True)
+        archive = self.request(
+            "/x/space/wbi/arc/search",
+            {"mid": member_id, "pn": 1, "ps": 30, "order": "pubdate"},
+            wbi=True,
+        )
+        card = info.get("card") or info
+        videos = archive.get("list", {}).get("vlist") or []
+        return {
+            "id": "member:" + str(member_id),
+            "title": card.get("name") or item.get("title", "用户"),
+            "cover": card.get("face") or item.get("cover", ""),
+            "subtitle": card.get("sign") or item.get("subtitle", ""),
+            "summary": card.get("official", {}).get("title", ""),
+            "url": "https://space.bilibili.com/" + str(member_id),
+            "videos": [self.item(v) for v in videos if v.get("bvid")],
+        }
 
     def detail(self, item):
         if str(item["id"]).startswith("ss"):
@@ -277,6 +382,86 @@ class Service:
         if len(streams) != 1:
             raise ValueError("当前原生播放器尚未支持此分段响应")
         return {"url": streams[0]["url"], "headers": headers, "page_url": item["url"]}
+
+    def history_remote(self, page=1):
+        data = self.request(
+            "/x/web-interface/history/cursor",
+            {"ps": 30, "view_at": 0, "business": "", "max": 0},
+        )
+        rows = data.get("list") or []
+        return [
+            self.item(
+                {
+                    "bvid": row.get("history", {}).get("bvid") or row.get("bvid"),
+                    "title": row.get("title", ""),
+                    "pic": row.get("cover", ""),
+                    "owner": row.get("author", {}),
+                    "stat": row.get("stat", {}),
+                    "desc": row.get("duration", ""),
+                }
+            )
+            for row in rows
+            if row.get("history", {}).get("bvid") or row.get("bvid")
+        ]
+
+    def subscriptions(self, page=1):
+        account = self.request("/x/web-interface/nav")
+        if not account.get("isLogin"):
+            raise ValueError("请先登录 Bilibili")
+        data = self.request(
+            "/x/space/bangumi/follow/list",
+            {"vmid": account["mid"], "type": 1, "pn": page, "ps": 30},
+        )
+        rows = data.get("list") or []
+        return [
+            {
+                "id": "ss" + str(row.get("season_id") or row.get("media_id")),
+                "title": row.get("title", ""),
+                "subtitle": row.get("season_type_name", "追番"),
+                "cover": row.get("cover", ""),
+                "summary": row.get("evaluate", ""),
+                "url": row.get("url")
+                or "https://www.bilibili.com/bangumi/play/ss"
+                + str(row.get("season_id") or row.get("media_id")),
+            }
+            for row in rows
+            if row.get("season_id") or row.get("media_id")
+        ]
+
+    def live_play(self, item):
+        room_id = item.get("live_room_id") or str(item.get("id", "")).removeprefix(
+            "live:"
+        )
+        data = self.request(
+            "/xlive/web-room/v2/index/getRoomPlayInfo",
+            {
+                "room_id": room_id,
+                "protocol": 0,
+                "format": 0,
+                "codec": 0,
+                "qn": 10000,
+                "platform": "web",
+                "https_url_req": 1,
+                "ptype": 8,
+            },
+        )
+        streams = data.get("playurl_info", {}).get("playurl", {}).get("stream", [])
+        urls = []
+        for stream in streams:
+            for fmt in stream.get("format", []):
+                for codec in fmt.get("codec", []):
+                    for url_info in codec.get("url_info", []):
+                        base = codec.get("base_url", "")
+                        extra = url_info.get("extra", "")
+                        if base:
+                            urls.append(url_info.get("host", "") + base + extra)
+        if not urls:
+            raise ValueError("直播间没有可用播放地址")
+        return {
+            "url": urls[0],
+            "headers": {"Referer": item.get("url", "https://live.bilibili.com/")},
+            "page_url": item.get("url"),
+        }
 
     def qr_generate(self):
         response = self.http.json(

@@ -36,6 +36,9 @@ def capture():
             store.set("theme", "dark")
             window.apply_theme()
         assert window.get_width() > 300
+        window.navigate("rank")
+        window.navigate("live")
+        window.navigate("later")
         window.navigate("my")
         window.settings()
         dialog = window.get_visible_dialog()

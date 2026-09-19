@@ -11,6 +11,8 @@ NixOS：首次在本仓库运行 `nix-shell native/shell.nix --run native/build-
 ## 已接入的路径
 
 - 原生自适应侧栏、搜索、详情、设置和文件对话框，系统浅色/深色。
+- 首页、动态、排行榜、直播、稍后再看、本地收藏、云端历史、追番/追剧、关注列表和热门关键词均使用 GTK 列表、分页和详情流程。
+- 直播流使用独立 libmpv 播放器；账号视频、直播、投稿用户和追番列表共享统一详情与播放入口。
 - GNOME 原生“关于”、操作日志和键盘快捷键页面；日志只保留最近 200 条消息，不写入账号凭据。
 - 设置中的 HTTP/HTTPS 代理可即时启用或清除，网络请求继续共享同一 Cookie 容器。
 - 本地收藏、历史、播放进度、原生资料库 JSON 导入导出。
@@ -36,7 +38,7 @@ NixOS：首次在本仓库运行 `nix-shell native/shell.nix --run native/build-
 
 - `python3 -m unittest discover -s native/tests -p 'test_*.py'`：存储/协议/规则回归。
 - `python3 native/tests/smoke.py`：真实 GTK 窗口、导航、收藏详情、设置弹窗与截图；支持 `NATIVE_TEST_WIDTH=460`、`NATIVE_TEST_DARK=1`。
-- `python3 native/tests/player_smoke.py /path/to/640x360-test-video.mp4`：真实 GLArea + libmpv 解码、进度、暂停、跳转；可传第二个 AAC 音频文件参数，验证独立 HTTP 音轨。PiliPlus 测试还覆盖画质切换时的进度与暂停状态。
+- `python3 native/tests/player_smoke.py /path/to/640x360-test-video.mp4`：真实 GLArea + libmpv 解码、进度、暂停、跳转；可传第二个 AAC 音频文件参数，验证独立 HTTP 音轨。测试还覆盖 DASH 画质切换时的进度、暂停状态和音频轨。
 - 真实公开 Bilibili DASH 在线视频已验证画面和双声道音轨；自动测试另用本地 HTTP 分离音轨防止 URL 被错误拆分。
 - 本机 Wayland 上播放器测试通过。自动化不覆盖账号操作、所有在线播放源及完整易用性验收。
 

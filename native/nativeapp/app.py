@@ -79,6 +79,10 @@ class Window(Adw.ApplicationWindow):
             routes = [
                 ("popular", "首页", "go-home-symbolic"),
                 ("dynamics", "动态", "view-list-symbolic"),
+                ("rank", "排行榜", "view-sort-ascending-symbolic"),
+                ("live", "直播", "camera-video-symbolic"),
+                ("later", "稍后再看", "alarm-symbolic"),
+                ("collect", "本地收藏", "starred-symbolic"),
                 ("my", "我的", "avatar-default-symbolic"),
             ]
         self.home_mode = "热门"
@@ -222,12 +226,24 @@ class Window(Adw.ApplicationWindow):
                 self.status("热门", "测试模式：未连接网络")
                 return
             self.feed_mode(self.home_mode)
-        elif route == "dynamics":
-            self.load(
-                self.service.dynamics,
-                lambda items: self.cards_after_clear(items),
-                lambda: self.navigate(route),
-            )
+        elif route in ("dynamics", "rank", "live", "later"):
+            if self.offline:
+                self.status(self.routes[route].get_title(), "测试模式：未连接网络")
+                return
+            operations = {
+                "dynamics": self.service.dynamics,
+                "rank": self.service.rank,
+                "live": self.service.live,
+                "later": self.service.watch_later,
+            }
+            if route == "dynamics":
+                self.load(
+                    operations[route],
+                    lambda items: self.cards_after_clear(items),
+                    lambda: self.navigate(route),
+                )
+            else:
+                self.list_page(operations[route])
         elif route == "timeline":
             self.load(
                 self.service.calendar, self.calendar, lambda: self.navigate(route)
@@ -356,6 +372,17 @@ class Window(Adw.ApplicationWindow):
         self.body.append(entry)
         results = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
         self.body.append(results)
+        hot = Gtk.FlowBox(
+            selection_mode=Gtk.SelectionMode.NONE, max_children_per_line=6
+        )
+        hot.add_css_class("linked")
+        self.body.append(hot)
+        if not self.offline:
+            self.async_call(
+                self.service.hot_keywords,
+                lambda items: self.hot_keywords(hot, entry, items),
+                lambda _: None,
+            )
 
         def search(*_):
             query = entry.get_text().strip()
@@ -377,6 +404,32 @@ class Window(Adw.ApplicationWindow):
 
         entry.connect("activate", search)
         entry.grab_focus()
+
+    def hot_keywords(self, box, entry, items):
+        while (child := box.get_first_child()) is not None:
+            box.remove(child)
+        for item in items[:24]:
+            button = Gtk.Button(label=item["title"])
+            button.connect(
+                "clicked",
+                lambda _, text=item["title"]: (entry.set_text(text), entry.activate()),
+            )
+            box.append(button)
+
+    def following(self):
+        body = margins(Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12))
+        self.push(
+            "我的关注",
+            Gtk.ScrolledWindow(child=Adw.Clamp(maximum_size=850, child=body)),
+        )
+        self.async_call(
+            self.service.following,
+            lambda items: self.cards(items, body),
+            lambda e: body.append(
+                Adw.StatusPage(title="无法读取关注列表", description=e)
+            ),
+            scoped=False,
+        )
 
     def push(self, title, content):
         toolbar = Adw.ToolbarView()
@@ -421,6 +474,9 @@ class Window(Adw.ApplicationWindow):
         collect.set_popover(pop)
         actions.append(collect)
         play = Gtk.Button(label="查找播放源" if APP == "Kazumi" else "播放")
+        if str(item.get("id", "")).startswith("member:"):
+            play.set_label("请选择投稿视频")
+            play.set_sensitive(False)
         play.add_css_class("suggested-action")
         play.connect(
             "clicked",
@@ -446,6 +502,17 @@ class Window(Adw.ApplicationWindow):
         def loaded(detail):
             item.update(detail)
             summary.set_text(detail.get("summary") or "暂无简介")
+            if detail.get("videos"):
+                group = Adw.PreferencesGroup(title="投稿视频")
+                for video in detail["videos"]:
+                    row = action_row(
+                        title=video["title"],
+                        subtitle=video.get("subtitle", ""),
+                        activatable=True,
+                    )
+                    row.connect("activated", lambda _, v=video: self.pili_play(v))
+                    group.add(row)
+                body.append(group)
             episodes = detail.get("pages") or detail.get("episodes") or []
             if episodes:
                 group = Adw.PreferencesGroup(title="选集")
@@ -466,7 +533,17 @@ class Window(Adw.ApplicationWindow):
                 body.append(group)
 
         if not self.offline:
-            self.async_call(lambda: self.service.detail(item), loaded)
+            operation = (
+                self.service.member_detail
+                if str(item.get("id", "")).startswith("member:")
+                else self.service.detail
+            )
+            self.async_call(
+                operation
+                if operation == self.service.member_detail
+                else lambda: operation(item),
+                loaded,
+            )
 
     def sources(self, item, body):
         group = Adw.PreferencesGroup(title="播放源", description="搜索已启用的规则")
@@ -541,9 +618,15 @@ class Window(Adw.ApplicationWindow):
                 self.message(str(error))
 
     def pili_play(self, item):
+        operation = (
+            self.service.live_play
+            if str(item.get("id", "")).startswith("live:")
+            else self.service.play
+        )
         self.async_call(
-            lambda: self.service.play(item),
+            lambda: operation(item),
             lambda info: self.open_player(item, item["title"], **info),
+            scoped=False,
         )
 
     def open_player(
@@ -566,11 +649,49 @@ class Window(Adw.ApplicationWindow):
 
         remote_library(self)
 
+    def remote_history(self):
+        body = margins(Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12))
+        self.push(
+            "云端观看历史",
+            Gtk.ScrolledWindow(child=Adw.Clamp(maximum_size=850, child=body)),
+        )
+        self.async_call(
+            self.service.history_remote,
+            lambda items: self.cards(items, body),
+            lambda e: body.append(
+                Adw.StatusPage(title="无法读取云端历史", description=e)
+            ),
+            scoped=False,
+        )
+
+    def subscriptions(self):
+        body = margins(Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12))
+        self.push(
+            "追番与追剧",
+            Gtk.ScrolledWindow(child=Adw.Clamp(maximum_size=850, child=body)),
+        )
+        self.async_call(
+            self.service.subscriptions,
+            lambda items: self.cards(items, body),
+            lambda e: body.append(
+                Adw.StatusPage(title="无法读取追番列表", description=e)
+            ),
+            scoped=False,
+        )
+
     def personal(self):
         self.clear()
         group = Adw.PreferencesGroup(title="资料库")
         for title, subtitle, icon, callback in [
             ("Bilibili 收藏夹", "账号收藏", "starred-symbolic", self.remote_library),
+            ("我的关注", "关注的用户", "avatar-default-symbolic", self.following),
+            (
+                "云端观看历史",
+                "账号历史记录",
+                "document-open-recent-symbolic",
+                self.remote_history,
+            ),
+            ("追番与追剧", "账号订阅", "bookmark-new-symbolic", self.subscriptions),
             ("Bilibili 账号", "扫码登录", "avatar-default-symbolic", self.account),
             (
                 "收藏",
@@ -599,7 +720,12 @@ class Window(Adw.ApplicationWindow):
             ("下载管理", "离线观看", "folder-download-symbolic", self.download_page),
             ("备份与恢复", "原生版资料库备份", "document-save-symbolic", self.backup),
             ("设置", "外观与播放", "preferences-system-symbolic", self.settings),
-            ("操作日志", "查看最近的错误和网络状态", "document-properties-symbolic", self.logs),
+            (
+                "操作日志",
+                "查看最近的错误和网络状态",
+                "document-properties-symbolic",
+                self.logs,
+            ),
             ("关于", "版本、许可证和项目链接", "help-about-symbolic", self.about),
         ]:
             if APP != "Kazumi" and title == "规则管理":
@@ -729,7 +855,9 @@ class Window(Adw.ApplicationWindow):
         header.append(copy)
         header.append(clear)
         body.append(header)
-        view = Gtk.TextView(editable=False, monospace=True, wrap_mode=Gtk.WrapMode.WORD_CHAR)
+        view = Gtk.TextView(
+            editable=False, monospace=True, wrap_mode=Gtk.WrapMode.WORD_CHAR
+        )
         view.set_vexpand(True)
         view.add_css_class("card")
         body.append(view)
@@ -809,8 +937,62 @@ class Window(Adw.ApplicationWindow):
         )
         group.add(speed)
         page.add(group)
+        group = Adw.PreferencesGroup(title="视频")
+        quality_values = [16, 32, 64, 80, 112, 116, 120]
+        quality = Adw.ComboRow(
+            title="默认画质",
+            model=Gtk.StringList.new(
+                ["360p", "480p", "720p", "1080p", "1080p+", "4K", "8K"]
+            ),
+        )
+        current_quality = self.store.get("video_quality", 80)
+        quality.set_selected(
+            quality_values.index(current_quality)
+            if current_quality in quality_values
+            else 2
+        )
+        quality.connect(
+            "notify::selected",
+            lambda *_: self.store.set(
+                "video_quality", quality_values[quality.get_selected()]
+            ),
+        )
+        group.add(quality)
+        codec_values = [7, 12, 13]
+        codec = Adw.ComboRow(
+            title="优先编码", model=Gtk.StringList.new(["AVC", "HEVC", "AV1"])
+        )
+        current_codec = self.store.get("video_codec", 7)
+        codec.set_selected(
+            codec_values.index(current_codec) if current_codec in codec_values else 0
+        )
+        codec.connect(
+            "notify::selected",
+            lambda *_: self.store.set(
+                "video_codec", codec_values[codec.get_selected()]
+            ),
+        )
+        group.add(codec)
+        volume = Adw.SpinRow.new_with_range(0, 100, 5)
+        volume.set_title("默认音量")
+        volume.set_value(self.store.get("volume", 80))
+        volume.connect(
+            "notify::value", lambda *_: self.store.set("volume", volume.get_value())
+        )
+        group.add(volume)
+        danmaku = Adw.SwitchRow(
+            title="默认显示弹幕", active=self.store.get("danmaku_enabled", True)
+        )
+        danmaku.connect(
+            "notify::active",
+            lambda *_: self.store.set("danmaku_enabled", danmaku.get_active()),
+        )
+        group.add(danmaku)
+        page.add(group)
         group = Adw.PreferencesGroup(title="帮助")
-        shortcut_row = action_row(title="键盘快捷键", subtitle="查看播放器和导航快捷键", activatable=True)
+        shortcut_row = action_row(
+            title="键盘快捷键", subtitle="查看播放器和导航快捷键", activatable=True
+        )
         shortcut_row.add_suffix(Gtk.Image(icon_name="go-next-symbolic"))
         shortcut_row.connect("activated", lambda *_: self.shortcuts())
         group.add(shortcut_row)
@@ -818,7 +1000,13 @@ class Window(Adw.ApplicationWindow):
         group = Adw.PreferencesGroup(title="网络")
         proxy = Adw.EntryRow(title="HTTP 代理（可选）")
         proxy.set_text(self.store.get("proxy", ""))
-        proxy.connect("changed", lambda row: (self.store.set("proxy", row.get_text()), self.http.set_proxy(row.get_text())))
+        proxy.connect(
+            "changed",
+            lambda row: (
+                self.store.set("proxy", row.get_text()),
+                self.http.set_proxy(row.get_text()),
+            ),
+        )
         group.add(proxy)
         page.add(group)
         dialog.add(page)
