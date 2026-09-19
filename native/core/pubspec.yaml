@@ -1,0 +1,9 @@
+name: pili_native_core
+publish_to: none
+environment:
+  sdk: '>=3.7.0 <4.0.0'
+dependencies:
+  protobuf: ^6.0.0
+  fixnum: ^1.1.1
+dev_dependencies:
+  test: ^1.25.0

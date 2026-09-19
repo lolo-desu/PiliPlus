@@ -58,6 +58,8 @@ def sign(params, key, timestamp=None):
 
 
 class Service:
+    danmaku_segmented = True
+
     def __init__(self, http, store):
         self.http, self.store = http, store
         self.key = None
@@ -192,7 +194,12 @@ class Service:
                 "episodes": data.get("episodes", []),
             }
         data = self.request("/x/web-interface/wbi/view", {"bvid": item["id"]}, wbi=True)
-        return {**self.item(data), "cid": data["cid"], "pages": data.get("pages", [])}
+        return {
+            **self.item(data),
+            "cid": data["cid"],
+            "aid": data["aid"],
+            "pages": data.get("pages", []),
+        }
 
     def play(self, item):
         detail = self.detail(item)
@@ -206,7 +213,7 @@ class Service:
                 {
                     "ep_id": episode["id"],
                     "cid": episode["cid"],
-                    "qn": 80,
+                    "qn": self.store.get("video_quality", 80),
                     "fnval": 4048,
                 },
             )
@@ -216,7 +223,7 @@ class Service:
                 {
                     "bvid": item["id"],
                     "cid": item.get("cid") or detail["cid"],
-                    "qn": 80,
+                    "qn": self.store.get("video_quality", 80),
                     "fnval": 4048,
                     "fnver": 0,
                     "fourk": 1,
@@ -229,7 +236,33 @@ class Service:
             audios = data["dash"].get("audio") or []
             if not videos:
                 raise ValueError("未返回可播放的视频流")
-            video = max(videos, key=lambda v: (v["id"], v.get("bandwidth", 0)))
+            quality = self.store.get("video_quality", 80)
+            codec = self.store.get("video_codec", 7)
+            eligible = [v for v in videos if v["id"] <= quality] or videos
+            video = max(
+                eligible,
+                key=lambda v: (
+                    v["id"],
+                    v.get("codecid", 7) == codec,
+                    v.get("bandwidth", 0),
+                ),
+            )
+            labels = dict(
+                zip(data.get("accept_quality", []), data.get("accept_description", []))
+            )
+            streams = []
+            for stream in sorted(
+                videos, key=lambda v: (v["id"], v.get("codecid", 7)), reverse=True
+            ):
+                code = stream.get("codecid", 7)
+                streams.append(
+                    {
+                        "url": stream.get("baseUrl") or stream["base_url"],
+                        "quality": stream["id"],
+                        "codec": code,
+                        "label": f"{labels.get(stream['id'], str(stream.get('height', stream['id'])) + 'p')} · { {7: 'AVC', 12: 'HEVC', 13: 'AV1'}.get(code, str(code)) }",
+                    }
+                )
             audio = max(audios, key=lambda a: a.get("bandwidth", 0)) if audios else None
             return {
                 "url": video.get("baseUrl") or video["base_url"],
@@ -238,8 +271,194 @@ class Service:
                 if audio
                 else None,
                 "page_url": item["url"],
+                "streams": streams,
             }
         streams = data.get("durl") or []
         if len(streams) != 1:
             raise ValueError("当前原生播放器尚未支持此分段响应")
         return {"url": streams[0]["url"], "headers": headers, "page_url": item["url"]}
+
+    def qr_generate(self):
+        response = self.http.json(
+            "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
+        )
+        if response.get("code"):
+            raise ValueError(response.get("message", "无法生成二维码"))
+        return response["data"]
+
+    def qr_poll(self, key):
+        response = self.http.json(
+            "https://passport.bilibili.com/x/passport-login/web/qrcode/poll",
+            query={"qrcode_key": key},
+        )
+        if response.get("code"):
+            raise ValueError(response.get("message", "登录请求失败"))
+        data = response["data"]
+        if data["code"] == 0:
+            account = self.request("/x/web-interface/nav")
+            if not account.get("isLogin"):
+                raise ValueError("登录响应未建立有效会话")
+            self.store.set(
+                "bilibili_account",
+                {"mid": account["mid"], "name": account.get("uname", "")},
+            )
+            if data.get("refresh_token"):
+                from .credentials import Vault
+
+                Vault(APP, self.store.path).set(
+                    "bilibili-refresh", data["refresh_token"]
+                )
+        # Never pass refresh tokens or cross-domain credential URLs to UI state.
+        return {"code": data["code"], "message": data.get("message", "")}
+
+    def logout(self):
+        with self.http.lock:
+            self.http.cookies.clear()
+            self.http.cookies.save(ignore_discard=True)
+        self.store.set("bilibili_account", {})
+        self.key = None
+        from .credentials import Vault
+
+        Vault(APP, self.store.path).remove("bilibili-refresh")
+
+    def danmaku_episodes(self, item):
+        detail = self.detail(item)
+        if str(item["id"]).startswith("ss"):
+            return [
+                {"id": e["cid"], "title": e.get("long_title") or e.get("title", "")}
+                for e in detail["episodes"]
+            ]
+        return [{"id": p["cid"], "title": p["part"]} for p in detail["pages"]]
+
+    def danmaku_comments(self, cid, segment=1):
+        import base64
+        import json
+        import os
+        from pathlib import Path
+        import shlex
+        import subprocess
+        from .danmaku import Comment
+
+        raw = self.http.request(
+            API + "/x/v2/dm/web/seg.so",
+            query={"type": 1, "oid": int(cid), "segment_index": segment},
+            headers={"Referer": "https://www.bilibili.com/"},
+            raw=True,
+        )
+        binary = Path(__file__).resolve().parents[1] / "bin/pili-core"
+        command = shlex.split(os.environ.get("NATIVE_CORE_RUNNER", "")) + [str(binary)]
+        result = subprocess.run(
+            command,
+            input=json.dumps(
+                {"method": "danmaku.decode", "data": base64.b64encode(raw).decode()}
+            )
+            + "\n",
+            capture_output=True,
+            text=True,
+            timeout=20,
+            check=True,
+        )
+        value = json.loads(result.stdout)
+        if "error" in value:
+            raise ValueError(value["error"])
+        return [
+            Comment(c["time"], c["text"], c["mode"], c["color"])
+            for c in value["result"]
+            if c["mode"] in (1, 4, 5)
+        ]
+
+    def post(self, path, data):
+        with self.http.lock:
+            csrf = next(
+                (
+                    cookie.value
+                    for cookie in self.http.cookies
+                    if cookie.name == "bili_jct"
+                    and cookie.domain.lstrip(".") == "bilibili.com"
+                ),
+                None,
+            )
+        if not csrf:
+            raise ValueError("请先登录 Bilibili")
+        response = self.http.json(
+            API + path,
+            method="POST",
+            data={**data, "csrf": csrf},
+            json_body=False,
+            headers={
+                "Referer": "https://www.bilibili.com/",
+                "User-Agent": "Mozilla/5.0",
+            },
+        )
+        if response.get("code"):
+            raise ValueError(
+                f"Bilibili {response['code']}: {response.get('message', '操作失败')}"
+            )
+        return response.get("data")
+
+    def like(self, item, enabled):
+        return self.post(
+            "/x/web-interface/archive/like",
+            {"bvid": item["id"], "like": 1 if enabled else 2},
+        )
+
+    def coin(self, item, count):
+        if count not in (1, 2):
+            raise ValueError("投币数量无效")
+        return self.post(
+            "/x/web-interface/coin/add",
+            {"bvid": item["id"], "multiply": count, "select_like": 0},
+        )
+
+    def favorite_folders(self, item=None):
+        account = self.request("/x/web-interface/nav")
+        if not account.get("isLogin"):
+            raise ValueError("请先登录 Bilibili")
+        params = {"up_mid": account["mid"], "type": 2}
+        if item:
+            params["rid"] = item.get("aid") or self.detail(item)["aid"]
+        return self.request("/x/v3/fav/folder/created/list-all", params).get("list", [])
+
+    def favorite_items(self, folder, page=1):
+        data = self.request(
+            "/x/v3/fav/resource/list",
+            {"media_id": folder, "pn": page, "ps": 30, "platform": "web"},
+        )
+        return [
+            self.item(
+                {
+                    **x,
+                    "pic": x.get("cover", ""),
+                    "owner": x.get("upper", {}),
+                    "stat": x.get("cnt_info", {}),
+                }
+            )
+            for x in data.get("medias", [])
+        ]
+
+    def set_favorites(self, item, add, remove):
+        aid = item.get("aid") or self.detail(item)["aid"]
+        return self.post(
+            "/x/v3/fav/resource/deal",
+            {
+                "rid": aid,
+                "type": 2,
+                "add_media_ids": ",".join(map(str, add)),
+                "del_media_ids": ",".join(map(str, remove)),
+            },
+        )
+
+    def comments(self, item, page=1):
+        aid = item.get("aid") or self.detail(item)["aid"]
+        return (
+            self.request(
+                "/x/v2/reply", {"type": 1, "oid": aid, "pn": page, "ps": 20, "sort": 2}
+            ).get("replies", [])
+            or []
+        )
+
+    def send_comment(self, item, message):
+        if not message.strip():
+            raise ValueError("评论不能为空")
+        aid = item.get("aid") or self.detail(item)["aid"]
+        return self.post("/x/v2/reply/add", {"type": 1, "oid": aid, "message": message})

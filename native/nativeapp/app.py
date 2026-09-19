@@ -387,8 +387,13 @@ class Window(Adw.ApplicationWindow):
         )
         body.append(label(item["title"], "title-1"))
         body.append(label(item.get("subtitle", ""), "dim-label"))
-        actions = Gtk.Box(spacing=8)
-        collect = Gtk.MenuButton(label="收藏")
+        actions = Gtk.FlowBox(
+            selection_mode=Gtk.SelectionMode.NONE,
+            column_spacing=6,
+            row_spacing=6,
+            max_children_per_line=4,
+        )
+        collect = Gtk.MenuButton(label="本地收藏")
         pop = Gtk.Popover()
         choices = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
         for state in ("想看", "在看", "看过", "搁置", "抛弃", "移除收藏"):
@@ -423,6 +428,9 @@ class Window(Adw.ApplicationWindow):
                 lambda: Gio.AppInfo.launch_default_for_uri(item["url"], None),
             )
         )
+        from .social import add_actions
+
+        add_actions(self, item, actions, body)
         body.append(actions)
         summary = label(item.get("summary") or "正在获取详情…")
         body.append(summary)
@@ -530,18 +538,32 @@ class Window(Adw.ApplicationWindow):
             lambda info: self.open_player(item, item["title"], **info),
         )
 
-    def open_player(self, item, name, url, headers=None, audio=None, page_url=None):
+    def open_player(
+        self, item, name, url, headers=None, audio=None, page_url=None, streams=None
+    ):
         from .playback import Playback
 
-        view = Playback(self, item, name, url, headers, audio, page_url)
+        view = Playback(self, item, name, url, headers, audio, page_url, streams)
         self.playback = view
         page = self.push(name, view)
         page.connect("hidden", lambda *_: view.pause_and_save())
+
+    def account(self):
+        from .account import show_account
+
+        show_account(self)
+
+    def remote_library(self):
+        from .social import remote_library
+
+        remote_library(self)
 
     def personal(self):
         self.clear()
         group = Adw.PreferencesGroup(title="资料库")
         for title, subtitle, icon, callback in [
+            ("Bilibili 收藏夹", "账号收藏", "starred-symbolic", self.remote_library),
+            ("Bilibili 账号", "扫码登录", "avatar-default-symbolic", self.account),
             (
                 "收藏",
                 "本地收藏夹",

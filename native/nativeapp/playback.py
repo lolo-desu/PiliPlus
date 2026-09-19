@@ -1,19 +1,35 @@
 import time
-from gi.repository import Gtk, Gdk, GLib
+from gi.repository import Gtk, Gdk, GLib, Adw
+from .danmaku import Overlay, parse_comments
 from .player import Video
 
 
 class Playback(Gtk.Box):
     def __init__(
-        self, window, item, name, url, headers=None, audio=None, page_url=None
+        self,
+        window,
+        item,
+        name,
+        url,
+        headers=None,
+        audio=None,
+        page_url=None,
+        streams=None,
     ):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         self.window, self.item, self.name = window, item.copy(), name
         self.url, self.page_url = url, page_url or url
         self.headers, self.audio = headers, audio
+        self.streams = streams or []
+        self.stream_generation = 0
         self.position, self.duration, self.last_save = 0.0, 0.0, 0
-        self.video = Video(window.message)
-        self.append(self.video)
+        self.video = Video(window.message, window.store.get("volume", 80))
+        self.danmaku = Overlay(window.store)
+        surface = Gtk.Overlay(child=self.video)
+        surface.add_overlay(self.danmaku)
+        self.append(surface)
+        self.danmaku_segments = set()
+        self.danmaku_identifier = None
         controls = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         for edge in ("start", "end", "top", "bottom"):
             getattr(controls, "set_margin_" + edge)(12)
@@ -46,16 +62,22 @@ class Playback(Gtk.Box):
         )
         bar.append(speed)
         volume = Gtk.VolumeButton()
-        volume.set_value(0.8)
+        volume.set_value(window.store.get("volume", 80) / 100)
         volume.connect(
             "value-changed",
-            lambda _, v: self.video.command("set", "volume", round(v * 100)),
+            lambda _, v: (
+                self.video.command("set", "volume", round(v * 100)),
+                window.store.set("volume", round(v * 100)),
+            ),
         )
         bar.append(volume)
         menu = Gtk.MenuButton(icon_name="view-more-symbolic", tooltip_text="播放选项")
         pop = Gtk.Popover()
         options = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        for title, callback in [
+        for title, callback in [("画质与编码", self.quality)] * bool(self.streams) + [
+            ("导入弹幕", self.import_danmaku),
+            ("在线弹幕", self.online_danmaku),
+            ("弹幕设置", self.danmaku_settings),
             ("加载字幕", self.subtitle),
             ("切换字幕", lambda: self.video.command("cycle", "sid")),
             ("切换音轨", lambda: self.video.command("cycle", "aid")),
@@ -107,6 +129,49 @@ class Playback(Gtk.Box):
         )
         self.video.load(url, headers, audio, start)
 
+    def quality(self):
+        dialog = Adw.PreferencesDialog(title="画质与编码")
+        page = Adw.PreferencesPage()
+        group = Adw.PreferencesGroup(
+            title="当前可播放的流",
+            description="仅显示服务器为当前账号返回的画质。切换时保留进度和暂停状态。",
+        )
+        for stream in self.streams:
+            row = Adw.ActionRow(title=stream["label"], activatable=True)
+            row.set_use_markup(False)
+            if stream["url"] == self.url:
+                row.add_suffix(Gtk.Image(icon_name="object-select-symbolic"))
+            row.connect(
+                "activated",
+                lambda _, value=stream: (dialog.close(), self.switch_stream(value)),
+            )
+            group.add(row)
+        page.add(group)
+        dialog.add(page)
+        dialog.present(self.window)
+
+    def switch_stream(self, stream):
+        self.stream_generation += 1
+        generation = self.stream_generation
+
+        def apply(status):
+            if self.video.closed or generation != self.stream_generation:
+                return False
+            self.url = stream["url"]
+            self.window.store.set("video_quality", stream["quality"])
+            self.window.store.set("video_codec", stream["codec"])
+            self.video.load(
+                self.url,
+                self.headers,
+                self.audio,
+                float(status.get("time-pos", self.position)),
+                paused=status.get("pause") == "yes",
+            )
+            self.video.command("set", "speed", status.get("speed", 1))
+            return False
+
+        self.video.status(apply)
+
     def fullscreen(self):
         self.window.unfullscreen() if self.window.is_fullscreen() else self.window.fullscreen()
 
@@ -150,6 +215,13 @@ class Playback(Gtk.Box):
             return False
         self.position = float(status.get("time-pos", self.position))
         self.duration = float(status.get("duration", self.duration))
+        self.danmaku.sync(
+            self.position, status.get("pause") == "yes", float(status.get("speed", 1))
+        )
+        if self.danmaku_identifier is not None and getattr(
+            self.window.service, "danmaku_segmented", False
+        ):
+            self.load_danmaku_segment()
         self.seek.set_range(0, max(self.duration, 1))
         self.seek.set_value(self.position)
         self.clock.set_text(
@@ -222,3 +294,125 @@ class Playback(Gtk.Box):
                 pass
 
         dialog.save(self.window, None, selected)
+
+    def import_danmaku(self):
+        dialog = Gtk.FileDialog(title="导入 JSON / XML 弹幕")
+
+        def chosen(dialog, result):
+            try:
+                path = dialog.open_finish(result).get_path()
+            except GLib.Error:
+                return
+            from pathlib import Path
+
+            def read():
+                if Path(path).stat().st_size > 32 * 1024 * 1024:
+                    raise ValueError("弹幕文件过大")
+                return parse_comments(Path(path).read_text())
+
+            self.window.async_call(
+                read,
+                lambda comments: (
+                    self.danmaku.add(comments),
+                    self.window.message(f"已加载 {len(comments)} 条弹幕"),
+                ),
+                scoped=False,
+            )
+
+        dialog.open(self.window, None, chosen)
+
+    def online_danmaku(self):
+        self.window.message("正在查询弹幕…")
+
+        def show(episodes):
+            dialog = Adw.Dialog(
+                title="选择弹幕剧集", content_width=500, content_height=550
+            )
+            group = Adw.PreferencesGroup()
+            for episode in episodes:
+                row = Adw.ActionRow(
+                    title=episode["title"], activatable=True, use_markup=False
+                )
+
+                def chosen(_, identifier=episode["id"]):
+                    dialog.close()
+                    self.danmaku_identifier = identifier
+                    self.danmaku_segments.clear()
+                    self.danmaku.comments = []
+                    self.danmaku.configure()
+                    self.load_danmaku_segment()
+
+                row.connect("activated", chosen)
+                group.add(row)
+            toolbar = Adw.ToolbarView(content=Gtk.ScrolledWindow(child=group))
+            toolbar.add_top_bar(Adw.HeaderBar())
+            dialog.set_child(toolbar)
+            dialog.present(self.window)
+
+        self.window.async_call(
+            lambda: self.window.service.danmaku_episodes(self.item), show, scoped=False
+        )
+
+    def danmaku_settings(self):
+        dialog = Adw.PreferencesDialog(title="弹幕设置")
+        page = Adw.PreferencesPage()
+        group = Adw.PreferencesGroup()
+        enabled = Adw.SwitchRow(title="显示弹幕", active=self.danmaku.visible_danmaku)
+
+        def update(key, value):
+            self.window.store.set(key, value)
+            self.danmaku.configure()
+
+        enabled.connect(
+            "notify::active", lambda *_: update("danmaku_enabled", enabled.get_active())
+        )
+        group.add(enabled)
+        for title, key, minimum, maximum, step in [
+            ("字号", "danmaku_font", 12, 48, 1),
+            ("不透明度", "danmaku_opacity", 0.1, 1, 0.05),
+            ("显示区域", "danmaku_area", 0.1, 1, 0.1),
+            ("延迟（秒）", "danmaku_offset", -120, 120, 0.5),
+        ]:
+            row = Adw.SpinRow.new_with_range(minimum, maximum, step)
+            row.set_title(title)
+            row.set_value(self.danmaku.preferences[key])
+            row.connect(
+                "notify::value", lambda row, _, key=key: update(key, row.get_value())
+            )
+            group.add(row)
+        blocked = Adw.EntryRow(title="屏蔽词（以逗号分隔）")
+        blocked.set_text(",".join(self.danmaku.preferences["danmaku_blocked"]))
+        blocked.connect(
+            "changed",
+            lambda row: update(
+                "danmaku_blocked",
+                [x.strip() for x in row.get_text().split(",") if x.strip()],
+            ),
+        )
+        group.add(blocked)
+        page.add(group)
+        dialog.add(page)
+        dialog.present(self.window)
+
+    def load_danmaku_segment(self):
+        identifier = self.danmaku_identifier
+        segmented = getattr(self.window.service, "danmaku_segmented", False)
+        segment = int(self.position // 360) + 1 if segmented else 1
+        key = (identifier, segment)
+        if key in self.danmaku_segments:
+            return
+        self.danmaku_segments.add(key)
+
+        def fetch():
+            return (
+                self.window.service.danmaku_comments(identifier, segment)
+                if segmented
+                else self.window.service.danmaku_comments(identifier)
+            )
+
+        def show(comments):
+            if not self.video.closed and identifier == self.danmaku_identifier:
+                self.danmaku.add(comments)
+                self.window.message(f"已加载 {len(comments)} 条弹幕")
+
+        self.window.async_call(fetch, show, scoped=False)
