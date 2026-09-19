@@ -243,6 +243,86 @@ class Service:
         )
         return [self.item(x) for x in result.get("result", [])]
 
+    def search_users(self, query, page=1):
+        data = self.request(
+            "/x/web-interface/wbi/search/type",
+            {"search_type": "bili_user", "keyword": query, "page": page},
+            wbi=True,
+        )
+        rows = data.get("result", [])
+        return [
+            {
+                "id": "member:" + str(row.get("mid")),
+                "title": row.get("uname", ""),
+                "cover": row.get("upic", ""),
+                "subtitle": row.get("usign", ""),
+                "url": "https://space.bilibili.com/" + str(row.get("mid")),
+                "member_id": row.get("mid"),
+            }
+            for row in rows
+            if row.get("mid")
+        ]
+
+    def search_articles(self, query, page=1):
+        data = self.request(
+            "/x/web-interface/wbi/search/type",
+            {"search_type": "article", "keyword": query, "page": page},
+            wbi=True,
+        )
+        rows = data.get("result", [])
+        return [
+            {
+                "id": "article:" + str(row.get("id")),
+                "title": re.sub("<[^>]+>", "", html.unescape(row.get("title", ""))),
+                "subtitle": re.sub("<[^>]+>", "", html.unescape(row.get("desc", ""))),
+                "url": "https://www.bilibili.com/read/cv" + str(row.get("id")),
+                "summary": re.sub("<[^>]+>", "", html.unescape(row.get("desc", ""))),
+            }
+            for row in rows
+            if row.get("id")
+        ]
+
+    def search_audio(self, query, page=1):
+        data = self.request(
+            "/x/web-interface/wbi/search/type",
+            {"search_type": "bili_audio", "keyword": query, "page": page},
+            wbi=True,
+        )
+        rows = data.get("result", [])
+        return [
+            {
+                "id": "audio:" + str(row.get("id")),
+                "title": row.get("title", ""),
+                "cover": row.get("upic", ""),
+                "subtitle": row.get("author", ""),
+                "url": "https://www.bilibili.com/audio/au" + str(row.get("id")),
+            }
+            for row in rows
+            if row.get("id")
+        ]
+
+    def search_pgc(self, query, page=1):
+        data = self.request(
+            "/x/web-interface/wbi/search/type",
+            {"search_type": "media_bangumi", "keyword": query, "page": page},
+            wbi=True,
+        )
+        rows = data.get("result", [])
+        return [
+            {
+                "id": "ss" + str(row.get("season_id") or row.get("media_id")),
+                "title": re.sub("<[^>]+>", "", html.unescape(row.get("title", ""))),
+                "cover": row.get("cover", ""),
+                "subtitle": row.get("season_type_name", "番剧"),
+                "summary": re.sub("<[^>]+>", "", html.unescape(row.get("desc", ""))),
+                "url": row.get("url")
+                or "https://www.bilibili.com/bangumi/play/ss"
+                + str(row.get("season_id") or row.get("media_id")),
+            }
+            for row in rows
+            if row.get("season_id") or row.get("media_id")
+        ]
+
     def calendar(self):
         result = self.request(
             "/pgc/web/timeline", {"types": 1, "before": 3, "after": 3}

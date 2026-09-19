@@ -222,6 +222,24 @@ class NativeTests(unittest.TestCase):
         self.assertEqual(value["title"], "UP")
         self.assertEqual(value["videos"][0]["id"], "BV4")
 
+    def test_search_modes_normalize_video_pgc_user_article_and_audio(self):
+        service = Service(None, self.store)
+        responses = {
+            "media_bangumi": [{"season_id": 5, "title": "番剧"}],
+            "bili_user": [{"mid": 6, "uname": "用户"}],
+            "article": [{"id": 7, "title": "专栏"}],
+            "bili_audio": [{"id": 8, "title": "音乐"}],
+        }
+
+        def request(path, params=None, wbi=False):
+            return {"result": responses[params["search_type"]]}
+
+        service.request = request
+        self.assertEqual(service.search_pgc("x")[0]["id"], "ss5")
+        self.assertEqual(service.search_users("x")[0]["id"], "member:6")
+        self.assertEqual(service.search_articles("x")[0]["id"], "article:7")
+        self.assertEqual(service.search_audio("x")[0]["id"], "audio:8")
+
     def test_api_errors_are_not_empty_success(self):
         class Http:
             def json(self, *args, **kwargs):

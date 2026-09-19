@@ -366,9 +366,12 @@ class Window(Adw.ApplicationWindow):
         self.split.set_show_content(True)
         self.page_title.set_title("搜索")
         self.clear()
-        entry = Gtk.SearchEntry(
-            placeholder_text="搜索番剧" if APP == "Kazumi" else "搜索视频"
-        )
+        mode_names = ["视频", "番剧", "用户", "专栏", "音乐"]
+        mode = Gtk.DropDown.new_from_strings(mode_names)
+        mode.set_selected(0)
+        mode.set_halign(Gtk.Align.START)
+        self.body.append(mode)
+        entry = Gtk.SearchEntry(placeholder_text="搜索视频")
         self.body.append(entry)
         results = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
         self.body.append(results)
@@ -396,8 +399,15 @@ class Window(Adw.ApplicationWindow):
                 self.clear(results)
                 self.cards(items, results)
 
+            operations = [
+                self.service.search,
+                self.service.search_pgc,
+                self.service.search_users,
+                self.service.search_articles,
+                self.service.search_audio,
+            ]
             self.async_call(
-                lambda: self.service.search(query),
+                lambda: operations[mode.get_selected()](query),
                 show,
                 lambda e: (self.clear(results), results.append(label(e))),
             )
