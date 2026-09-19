@@ -937,6 +937,35 @@ class Window(Adw.ApplicationWindow):
         )
         group.add(speed)
         page.add(group)
+        settings_groups = {}
+        for title, group_name, key, default in [
+            ("自动播放", "播放行为", "autoPlayEnable", True),
+            ("最小化时暂停", "播放行为", "pauseOnMinimize", True),
+            ("后台继续播放", "播放行为", "continuePlayInBackground", False),
+            ("双击快进", "播放行为", "enableQuickDouble", True),
+            ("手势调节音量和亮度", "播放行为", "enableSlideVolumeBrightness", True),
+            ("显示弹幕", "弹幕", "enableShowDanmaku", True),
+            ("点击发送弹幕", "弹幕", "enableTapDm", False),
+            ("显示相关推荐", "页面", "showRelatedVideo", True),
+            ("显示评论", "页面", "showVideoReply", True),
+            ("保存上次推荐列表", "推荐", "enableSaveLastData", True),
+            ("过滤已关注用户推荐", "推荐", "exemptFilterForFollowed", False),
+            ("显示托盘图标", "桌面", "showTrayIcon", False),
+            ("关闭窗口时最小化到托盘", "桌面", "minimizeOnExit", False),
+        ]:
+            if not hasattr(self, "_settings_groups"):
+                self._settings_groups = {}
+            group = self._settings_groups.setdefault(
+                group_name, Adw.PreferencesGroup(title=group_name)
+            )
+            row = Adw.SwitchRow(title=title, active=self.store.get(key, default))
+            row.connect(
+                "notify::active",
+                lambda row, _, key=key: self.store.set(key, row.get_active()),
+            )
+            group.add(row)
+        for group in settings_groups.values():
+            page.add(group)
         group = Adw.PreferencesGroup(title="视频")
         quality_values = [16, 32, 64, 80, 112, 116, 120]
         quality = Adw.ComboRow(
