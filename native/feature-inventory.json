@@ -5,7 +5,7 @@
   "groups": [
     {
       "name": "about",
-      "status": "pending",
+      "status": "complete",
       "upstream_files": [
         "lib/pages/about/view.dart"
       ]
@@ -103,7 +103,7 @@
     },
     {
       "name": "danmaku",
-      "status": "pending",
+      "status": "partial",
       "upstream_files": [
         "lib/pages/danmaku/controller.dart",
         "lib/pages/danmaku/danmaku_model.dart",
@@ -127,7 +127,7 @@
     },
     {
       "name": "download",
-      "status": "pending",
+      "status": "partial",
       "upstream_files": [
         "lib/pages/download/controller.dart",
         "lib/pages/download/detail/view.dart",
@@ -276,7 +276,7 @@
     },
     {
       "name": "fav",
-      "status": "pending",
+      "status": "partial",
       "upstream_files": [
         "lib/pages/fav/article/controller.dart",
         "lib/pages/fav/article/view.dart",
@@ -347,7 +347,7 @@
     },
     {
       "name": "follow",
-      "status": "pending",
+      "status": "partial",
       "upstream_files": [
         "lib/pages/follow/child/child_controller.dart",
         "lib/pages/follow/child/child_view.dart",
@@ -393,7 +393,7 @@
     },
     {
       "name": "history",
-      "status": "pending",
+      "status": "partial",
       "upstream_files": [
         "lib/pages/history/base_controller.dart",
         "lib/pages/history/controller.dart",
@@ -446,7 +446,7 @@
     },
     {
       "name": "live",
-      "status": "pending",
+      "status": "partial",
       "upstream_files": [
         "lib/pages/live/controller.dart",
         "lib/pages/live/view.dart",
@@ -534,7 +534,7 @@
     },
     {
       "name": "login",
-      "status": "pending",
+      "status": "partial",
       "upstream_files": [
         "lib/pages/login/controller.dart",
         "lib/pages/login/geetest/geetest_webview_dialog.dart",
@@ -816,7 +816,7 @@
     },
     {
       "name": "pgc",
-      "status": "pending",
+      "status": "partial",
       "upstream_files": [
         "lib/pages/pgc/controller.dart",
         "lib/pages/pgc/view.dart",
@@ -861,7 +861,7 @@
     },
     {
       "name": "rank",
-      "status": "pending",
+      "status": "partial",
       "upstream_files": [
         "lib/pages/rank/controller.dart",
         "lib/pages/rank/view.dart",
@@ -1001,7 +1001,7 @@
     },
     {
       "name": "subscription",
-      "status": "pending",
+      "status": "partial",
       "upstream_files": [
         "lib/pages/subscription/controller.dart",
         "lib/pages/subscription/view.dart",
@@ -1080,7 +1080,7 @@
     },
     {
       "name": "webview",
-      "status": "pending",
+      "status": "partial",
       "upstream_files": [
         "lib/pages/webview/view.dart"
       ]
