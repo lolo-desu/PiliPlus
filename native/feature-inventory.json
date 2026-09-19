@@ -1,0 +1,1140 @@
+{
+  "upstream_frontend": "Flutter",
+  "target_frontend": "GTK4/libadwaita",
+  "feature_parity": false,
+  "groups": [
+    {
+      "name": "about",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/about/view.dart"
+      ]
+    },
+    {
+      "name": "article",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/article/controller.dart",
+        "lib/pages/article/view.dart",
+        "lib/pages/article/widgets/article_ops.dart",
+        "lib/pages/article/widgets/html_render.dart",
+        "lib/pages/article/widgets/opus_content.dart"
+      ]
+    },
+    {
+      "name": "article_list",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/article_list/controller.dart",
+        "lib/pages/article_list/view.dart",
+        "lib/pages/article_list/widgets/item.dart"
+      ]
+    },
+    {
+      "name": "audio",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/audio/controller.dart",
+        "lib/pages/audio/view.dart",
+        "lib/pages/audio/volume_button.dart"
+      ]
+    },
+    {
+      "name": "blacklist",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/blacklist/controller.dart",
+        "lib/pages/blacklist/view.dart"
+      ]
+    },
+    {
+      "name": "bubble",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/bubble/controller.dart",
+        "lib/pages/bubble/view.dart"
+      ]
+    },
+    {
+      "name": "coin_log",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/coin_log/controller.dart"
+      ]
+    },
+    {
+      "name": "common",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/common/common_controller.dart",
+        "lib/pages/common/common_data_controller.dart",
+        "lib/pages/common/common_intro_controller.dart",
+        "lib/pages/common/common_list_controller.dart",
+        "lib/pages/common/common_page.dart",
+        "lib/pages/common/common_whisper_controller.dart",
+        "lib/pages/common/dyn/common_dyn_controller.dart",
+        "lib/pages/common/dyn/common_dyn_page.dart",
+        "lib/pages/common/dyn/like_list/controller.dart",
+        "lib/pages/common/dyn/like_list/view.dart",
+        "lib/pages/common/dyn/like_list/widgets/item.dart",
+        "lib/pages/common/dyn/repost_list/controller.dart",
+        "lib/pages/common/dyn/repost_list/view.dart",
+        "lib/pages/common/dyn/repost_list/widgets/item.dart",
+        "lib/pages/common/fab_mixin.dart",
+        "lib/pages/common/multi_select/base.dart",
+        "lib/pages/common/multi_select/multi_select_controller.dart",
+        "lib/pages/common/page_order_mixin.dart",
+        "lib/pages/common/publish/common_publish_page.dart",
+        "lib/pages/common/publish/common_rich_text_pub_page.dart",
+        "lib/pages/common/publish/common_text_pub_page.dart",
+        "lib/pages/common/publish/publish_route.dart",
+        "lib/pages/common/reply_controller.dart",
+        "lib/pages/common/search/common_search_controller.dart",
+        "lib/pages/common/search/common_search_page.dart",
+        "lib/pages/common/slide/common_slide_page.dart"
+      ]
+    },
+    {
+      "name": "contact",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/contact/view.dart"
+      ]
+    },
+    {
+      "name": "danmaku",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/danmaku/controller.dart",
+        "lib/pages/danmaku/danmaku_model.dart",
+        "lib/pages/danmaku/view.dart"
+      ]
+    },
+    {
+      "name": "danmaku_block",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/danmaku_block/controller.dart",
+        "lib/pages/danmaku_block/view.dart"
+      ]
+    },
+    {
+      "name": "dlna",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/dlna/view.dart"
+      ]
+    },
+    {
+      "name": "download",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/download/controller.dart",
+        "lib/pages/download/detail/view.dart",
+        "lib/pages/download/detail/widgets/item.dart",
+        "lib/pages/download/downloading/view.dart",
+        "lib/pages/download/search/controller.dart",
+        "lib/pages/download/search/view.dart",
+        "lib/pages/download/view.dart"
+      ]
+    },
+    {
+      "name": "dynamics",
+      "status": "partial",
+      "upstream_files": [
+        "lib/pages/dynamics/controller.dart",
+        "lib/pages/dynamics/view.dart",
+        "lib/pages/dynamics/widgets/action_panel.dart",
+        "lib/pages/dynamics/widgets/additional_panel.dart",
+        "lib/pages/dynamics/widgets/author_panel.dart",
+        "lib/pages/dynamics/widgets/blocked_item.dart",
+        "lib/pages/dynamics/widgets/content_panel.dart",
+        "lib/pages/dynamics/widgets/dyn_content.dart",
+        "lib/pages/dynamics/widgets/dynamic_panel.dart",
+        "lib/pages/dynamics/widgets/forward_panel.dart",
+        "lib/pages/dynamics/widgets/interaction.dart",
+        "lib/pages/dynamics/widgets/live_panel.dart",
+        "lib/pages/dynamics/widgets/live_panel_sub.dart",
+        "lib/pages/dynamics/widgets/live_rcmd_panel.dart",
+        "lib/pages/dynamics/widgets/module_panel.dart",
+        "lib/pages/dynamics/widgets/rich_node_panel.dart",
+        "lib/pages/dynamics/widgets/up_panel.dart",
+        "lib/pages/dynamics/widgets/video_panel.dart",
+        "lib/pages/dynamics/widgets/vote.dart",
+        "lib/pages/dynamics/widgets/vote_decoration.dart"
+      ]
+    },
+    {
+      "name": "dynamics_create",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/dynamics_create/view.dart"
+      ]
+    },
+    {
+      "name": "dynamics_create_reserve",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/dynamics_create_reserve/controller.dart",
+        "lib/pages/dynamics_create_reserve/view.dart"
+      ]
+    },
+    {
+      "name": "dynamics_create_vote",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/dynamics_create_vote/controller.dart",
+        "lib/pages/dynamics_create_vote/view.dart"
+      ]
+    },
+    {
+      "name": "dynamics_detail",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/dynamics_detail/controller.dart",
+        "lib/pages/dynamics_detail/view.dart"
+      ]
+    },
+    {
+      "name": "dynamics_mention",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/dynamics_mention/controller.dart",
+        "lib/pages/dynamics_mention/view.dart",
+        "lib/pages/dynamics_mention/widgets/item.dart"
+      ]
+    },
+    {
+      "name": "dynamics_repost",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/dynamics_repost/view.dart"
+      ]
+    },
+    {
+      "name": "dynamics_select_topic",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/dynamics_select_topic/controller.dart",
+        "lib/pages/dynamics_select_topic/view.dart",
+        "lib/pages/dynamics_select_topic/widgets/item.dart"
+      ]
+    },
+    {
+      "name": "dynamics_tab",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/dynamics_tab/controller.dart",
+        "lib/pages/dynamics_tab/view.dart"
+      ]
+    },
+    {
+      "name": "dynamics_topic",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/dynamics_topic/controller.dart",
+        "lib/pages/dynamics_topic/view.dart"
+      ]
+    },
+    {
+      "name": "dynamics_topic_rcmd",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/dynamics_topic_rcmd/controller.dart",
+        "lib/pages/dynamics_topic_rcmd/view.dart"
+      ]
+    },
+    {
+      "name": "emote",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/emote/controller.dart",
+        "lib/pages/emote/view.dart"
+      ]
+    },
+    {
+      "name": "episode_panel",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/episode_panel/view.dart"
+      ]
+    },
+    {
+      "name": "exp_log",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/exp_log/controller.dart"
+      ]
+    },
+    {
+      "name": "fan",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/fan/controller.dart",
+        "lib/pages/fan/view.dart"
+      ]
+    },
+    {
+      "name": "fav",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/fav/article/controller.dart",
+        "lib/pages/fav/article/view.dart",
+        "lib/pages/fav/article/widget/item.dart",
+        "lib/pages/fav/cheese/controller.dart",
+        "lib/pages/fav/cheese/view.dart",
+        "lib/pages/fav/note/child_view.dart",
+        "lib/pages/fav/note/controller.dart",
+        "lib/pages/fav/note/view.dart",
+        "lib/pages/fav/note/widget/item.dart",
+        "lib/pages/fav/pgc/child_view.dart",
+        "lib/pages/fav/pgc/controller.dart",
+        "lib/pages/fav/pgc/pgc_layout.dart",
+        "lib/pages/fav/pgc/view.dart",
+        "lib/pages/fav/pgc/widget/item.dart",
+        "lib/pages/fav/topic/controller.dart",
+        "lib/pages/fav/topic/view.dart",
+        "lib/pages/fav/video/controller.dart",
+        "lib/pages/fav/video/view.dart",
+        "lib/pages/fav/video/widgets/item.dart",
+        "lib/pages/fav/view.dart"
+      ]
+    },
+    {
+      "name": "fav_create",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/fav_create/view.dart"
+      ]
+    },
+    {
+      "name": "fav_detail",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/fav_detail/controller.dart",
+        "lib/pages/fav_detail/view.dart",
+        "lib/pages/fav_detail/widget/fav_video_card.dart"
+      ]
+    },
+    {
+      "name": "fav_folder_sort",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/fav_folder_sort/view.dart"
+      ]
+    },
+    {
+      "name": "fav_panel",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/fav_panel/view.dart"
+      ]
+    },
+    {
+      "name": "fav_search",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/fav_search/controller.dart",
+        "lib/pages/fav_search/view.dart"
+      ]
+    },
+    {
+      "name": "fav_sort",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/fav_sort/view.dart"
+      ]
+    },
+    {
+      "name": "follow",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/follow/child/child_controller.dart",
+        "lib/pages/follow/child/child_view.dart",
+        "lib/pages/follow/controller.dart",
+        "lib/pages/follow/view.dart",
+        "lib/pages/follow/widgets/follow_item.dart"
+      ]
+    },
+    {
+      "name": "follow_search",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/follow_search/controller.dart",
+        "lib/pages/follow_search/view.dart"
+      ]
+    },
+    {
+      "name": "follow_tag_sort",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/follow_tag_sort/view.dart"
+      ]
+    },
+    {
+      "name": "follow_type",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/follow_type/controller.dart",
+        "lib/pages/follow_type/follow_same/controller.dart",
+        "lib/pages/follow_type/follow_same/view.dart",
+        "lib/pages/follow_type/followed/controller.dart",
+        "lib/pages/follow_type/followed/view.dart",
+        "lib/pages/follow_type/view.dart",
+        "lib/pages/follow_type/widgets/item.dart"
+      ]
+    },
+    {
+      "name": "group_panel",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/group_panel/view.dart"
+      ]
+    },
+    {
+      "name": "history",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/history/base_controller.dart",
+        "lib/pages/history/controller.dart",
+        "lib/pages/history/view.dart",
+        "lib/pages/history/widgets/item.dart"
+      ]
+    },
+    {
+      "name": "history_search",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/history_search/controller.dart",
+        "lib/pages/history_search/view.dart"
+      ]
+    },
+    {
+      "name": "home",
+      "status": "partial",
+      "upstream_files": [
+        "lib/pages/home/controller.dart",
+        "lib/pages/home/view.dart"
+      ]
+    },
+    {
+      "name": "hot",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/hot/controller.dart",
+        "lib/pages/hot/view.dart"
+      ]
+    },
+    {
+      "name": "later",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/later/base_controller.dart",
+        "lib/pages/later/child_view.dart",
+        "lib/pages/later/controller.dart",
+        "lib/pages/later/view.dart",
+        "lib/pages/later/widgets/video_card_h_later.dart"
+      ]
+    },
+    {
+      "name": "later_search",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/later_search/controller.dart",
+        "lib/pages/later_search/view.dart"
+      ]
+    },
+    {
+      "name": "live",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/live/controller.dart",
+        "lib/pages/live/view.dart",
+        "lib/pages/live/widgets/live_item_app.dart"
+      ]
+    },
+    {
+      "name": "live_area",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/live_area/controller.dart",
+        "lib/pages/live_area/view.dart"
+      ]
+    },
+    {
+      "name": "live_area_detail",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/live_area_detail/child/controller.dart",
+        "lib/pages/live_area_detail/child/view.dart",
+        "lib/pages/live_area_detail/controller.dart",
+        "lib/pages/live_area_detail/view.dart"
+      ]
+    },
+    {
+      "name": "live_dm_block",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/live_dm_block/controller.dart",
+        "lib/pages/live_dm_block/view.dart"
+      ]
+    },
+    {
+      "name": "live_emote",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/live_emote/controller.dart",
+        "lib/pages/live_emote/view.dart"
+      ]
+    },
+    {
+      "name": "live_follow",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/live_follow/controller.dart",
+        "lib/pages/live_follow/view.dart",
+        "lib/pages/live_follow/widgets/live_item_follow.dart"
+      ]
+    },
+    {
+      "name": "live_room",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/live_room/contribution_rank/controller.dart",
+        "lib/pages/live_room/contribution_rank/view.dart",
+        "lib/pages/live_room/controller.dart",
+        "lib/pages/live_room/send_danmaku/view.dart",
+        "lib/pages/live_room/superchat/superchat_card.dart",
+        "lib/pages/live_room/superchat/superchat_panel.dart",
+        "lib/pages/live_room/view.dart",
+        "lib/pages/live_room/widgets/bottom_control.dart",
+        "lib/pages/live_room/widgets/chat_panel.dart",
+        "lib/pages/live_room/widgets/header_control.dart"
+      ]
+    },
+    {
+      "name": "live_search",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/live_search/child/controller.dart",
+        "lib/pages/live_search/child/view.dart",
+        "lib/pages/live_search/controller.dart",
+        "lib/pages/live_search/view.dart",
+        "lib/pages/live_search/widgets/live_search_room.dart",
+        "lib/pages/live_search/widgets/live_search_user.dart"
+      ]
+    },
+    {
+      "name": "log_table",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/log_table/controller.dart",
+        "lib/pages/log_table/view.dart"
+      ]
+    },
+    {
+      "name": "login",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/login/controller.dart",
+        "lib/pages/login/geetest/geetest_webview_dialog.dart",
+        "lib/pages/login/view.dart"
+      ]
+    },
+    {
+      "name": "login_devices",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/login_devices/controller.dart",
+        "lib/pages/login_devices/view.dart"
+      ]
+    },
+    {
+      "name": "login_log",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/login_log/controller.dart"
+      ]
+    },
+    {
+      "name": "main",
+      "status": "partial",
+      "upstream_files": [
+        "lib/pages/main/controller.dart",
+        "lib/pages/main/view.dart"
+      ]
+    },
+    {
+      "name": "main_reply",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/main_reply/controller.dart",
+        "lib/pages/main_reply/view.dart"
+      ]
+    },
+    {
+      "name": "match_info",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/match_info/controller.dart",
+        "lib/pages/match_info/view.dart"
+      ]
+    },
+    {
+      "name": "member",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member/controller.dart",
+        "lib/pages/member/view.dart",
+        "lib/pages/member/widget/header_layout_widget.dart",
+        "lib/pages/member/widget/medal_wall.dart",
+        "lib/pages/member/widget/medal_widget.dart",
+        "lib/pages/member/widget/reserve_button.dart",
+        "lib/pages/member/widget/user_info_card.dart"
+      ]
+    },
+    {
+      "name": "member_article",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_article/controller.dart",
+        "lib/pages/member_article/view.dart",
+        "lib/pages/member_article/widget/item.dart"
+      ]
+    },
+    {
+      "name": "member_audio",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_audio/controller.dart",
+        "lib/pages/member_audio/view.dart",
+        "lib/pages/member_audio/widgets/item.dart"
+      ]
+    },
+    {
+      "name": "member_cheese",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_cheese/controller.dart",
+        "lib/pages/member_cheese/view.dart",
+        "lib/pages/member_cheese/widgets/item.dart"
+      ]
+    },
+    {
+      "name": "member_coin_arc",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_coin_arc/controller.dart",
+        "lib/pages/member_coin_arc/view.dart",
+        "lib/pages/member_coin_arc/widgets/item.dart"
+      ]
+    },
+    {
+      "name": "member_comic",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_comic/controller.dart",
+        "lib/pages/member_comic/view.dart",
+        "lib/pages/member_comic/widgets/item.dart"
+      ]
+    },
+    {
+      "name": "member_contribute",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_contribute/controller.dart",
+        "lib/pages/member_contribute/view.dart"
+      ]
+    },
+    {
+      "name": "member_dynamics",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_dynamics/controller.dart",
+        "lib/pages/member_dynamics/view.dart"
+      ]
+    },
+    {
+      "name": "member_favorite",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_favorite/controller.dart",
+        "lib/pages/member_favorite/view.dart",
+        "lib/pages/member_favorite/widget/item.dart"
+      ]
+    },
+    {
+      "name": "member_guard",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_guard/controller.dart",
+        "lib/pages/member_guard/view.dart"
+      ]
+    },
+    {
+      "name": "member_home",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_home/view.dart",
+        "lib/pages/member_home/widgets/fav_item.dart",
+        "lib/pages/member_home/widgets/video_card_v_member_home.dart"
+      ]
+    },
+    {
+      "name": "member_like_arc",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_like_arc/controller.dart",
+        "lib/pages/member_like_arc/view.dart"
+      ]
+    },
+    {
+      "name": "member_opus",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_opus/controller.dart",
+        "lib/pages/member_opus/view.dart",
+        "lib/pages/member_opus/widgets/space_opus_item.dart"
+      ]
+    },
+    {
+      "name": "member_pgc",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_pgc/controller.dart",
+        "lib/pages/member_pgc/view.dart",
+        "lib/pages/member_pgc/widgets/pgc_card_v_member_pgc.dart"
+      ]
+    },
+    {
+      "name": "member_profile",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_profile/view.dart"
+      ]
+    },
+    {
+      "name": "member_search",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_search/child/controller.dart",
+        "lib/pages/member_search/child/view.dart",
+        "lib/pages/member_search/child/widgets/search_archive_grpc.dart",
+        "lib/pages/member_search/controller.dart",
+        "lib/pages/member_search/view.dart"
+      ]
+    },
+    {
+      "name": "member_season_series",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_season_series/controller.dart",
+        "lib/pages/member_season_series/view.dart",
+        "lib/pages/member_season_series/widget/season_series_card.dart"
+      ]
+    },
+    {
+      "name": "member_shop",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_shop/controller.dart",
+        "lib/pages/member_shop/view.dart",
+        "lib/pages/member_shop/widgets/item.dart"
+      ]
+    },
+    {
+      "name": "member_upower_rank",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_upower_rank/controller.dart",
+        "lib/pages/member_upower_rank/view.dart"
+      ]
+    },
+    {
+      "name": "member_video",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_video/controller.dart",
+        "lib/pages/member_video/view.dart",
+        "lib/pages/member_video/widgets/video_card_h_member_video.dart"
+      ]
+    },
+    {
+      "name": "member_video_web",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/member_video_web/archive/controller.dart",
+        "lib/pages/member_video_web/archive/view.dart",
+        "lib/pages/member_video_web/base/controller.dart",
+        "lib/pages/member_video_web/base/view.dart",
+        "lib/pages/member_video_web/season_series/controller.dart",
+        "lib/pages/member_video_web/season_series/view.dart"
+      ]
+    },
+    {
+      "name": "mine",
+      "status": "partial",
+      "upstream_files": [
+        "lib/pages/mine/controller.dart",
+        "lib/pages/mine/view.dart",
+        "lib/pages/mine/widgets/item.dart"
+      ]
+    },
+    {
+      "name": "msg_feed_top",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/msg_feed_top/at_me/controller.dart",
+        "lib/pages/msg_feed_top/at_me/view.dart",
+        "lib/pages/msg_feed_top/like_detail/controller.dart",
+        "lib/pages/msg_feed_top/like_detail/view.dart",
+        "lib/pages/msg_feed_top/like_me/controller.dart",
+        "lib/pages/msg_feed_top/like_me/view.dart",
+        "lib/pages/msg_feed_top/reply_me/controller.dart",
+        "lib/pages/msg_feed_top/reply_me/view.dart",
+        "lib/pages/msg_feed_top/sys_msg/controller.dart",
+        "lib/pages/msg_feed_top/sys_msg/view.dart"
+      ]
+    },
+    {
+      "name": "music",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/music/controller.dart",
+        "lib/pages/music/video/controller.dart",
+        "lib/pages/music/video/view.dart",
+        "lib/pages/music/view.dart",
+        "lib/pages/music/widget/music_video_card_h.dart"
+      ]
+    },
+    {
+      "name": "my_reply",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/my_reply/view.dart"
+      ]
+    },
+    {
+      "name": "pgc",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/pgc/controller.dart",
+        "lib/pages/pgc/view.dart",
+        "lib/pages/pgc/widgets/pgc_card_v.dart",
+        "lib/pages/pgc/widgets/pgc_card_v_timeline.dart"
+      ]
+    },
+    {
+      "name": "pgc_index",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/pgc_index/controller.dart",
+        "lib/pages/pgc_index/view.dart",
+        "lib/pages/pgc_index/widgets/pgc_card_v_pgc_index.dart"
+      ]
+    },
+    {
+      "name": "pgc_review",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/pgc_review/child/controller.dart",
+        "lib/pages/pgc_review/child/view.dart",
+        "lib/pages/pgc_review/post/view.dart",
+        "lib/pages/pgc_review/view.dart"
+      ]
+    },
+    {
+      "name": "popular_precious",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/popular_precious/controller.dart",
+        "lib/pages/popular_precious/view.dart"
+      ]
+    },
+    {
+      "name": "popular_series",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/popular_series/controller.dart",
+        "lib/pages/popular_series/view.dart"
+      ]
+    },
+    {
+      "name": "rank",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/rank/controller.dart",
+        "lib/pages/rank/view.dart",
+        "lib/pages/rank/zone/controller.dart",
+        "lib/pages/rank/zone/view.dart",
+        "lib/pages/rank/zone/widget/pgc_rank_item.dart"
+      ]
+    },
+    {
+      "name": "rcmd",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/rcmd/controller.dart",
+        "lib/pages/rcmd/view.dart"
+      ]
+    },
+    {
+      "name": "save_panel",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/save_panel/view.dart"
+      ]
+    },
+    {
+      "name": "search",
+      "status": "partial",
+      "upstream_files": [
+        "lib/pages/search/controller.dart",
+        "lib/pages/search/view.dart",
+        "lib/pages/search/widgets/hot_keyword.dart",
+        "lib/pages/search/widgets/search_text.dart"
+      ]
+    },
+    {
+      "name": "search_panel",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/search_panel/all/controller.dart",
+        "lib/pages/search_panel/all/view.dart",
+        "lib/pages/search_panel/all/widgets/activity.dart",
+        "lib/pages/search_panel/all/widgets/esports.dart",
+        "lib/pages/search_panel/all/widgets/user.dart",
+        "lib/pages/search_panel/article/controller.dart",
+        "lib/pages/search_panel/article/view.dart",
+        "lib/pages/search_panel/article/widgets/item.dart",
+        "lib/pages/search_panel/controller.dart",
+        "lib/pages/search_panel/live/view.dart",
+        "lib/pages/search_panel/live/widgets/item.dart",
+        "lib/pages/search_panel/pgc/view.dart",
+        "lib/pages/search_panel/pgc/widgets/item.dart",
+        "lib/pages/search_panel/user/controller.dart",
+        "lib/pages/search_panel/user/view.dart",
+        "lib/pages/search_panel/user/widgets/item.dart",
+        "lib/pages/search_panel/video/controller.dart",
+        "lib/pages/search_panel/video/view.dart",
+        "lib/pages/search_panel/view.dart"
+      ]
+    },
+    {
+      "name": "search_result",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/search_result/controller.dart",
+        "lib/pages/search_result/view.dart"
+      ]
+    },
+    {
+      "name": "search_trending",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/search_trending/controller.dart",
+        "lib/pages/search_trending/view.dart"
+      ]
+    },
+    {
+      "name": "setting",
+      "status": "partial",
+      "upstream_files": [
+        "lib/pages/setting/common_setting.dart",
+        "lib/pages/setting/models/extra_settings.dart",
+        "lib/pages/setting/models/model.dart",
+        "lib/pages/setting/models/play_settings.dart",
+        "lib/pages/setting/models/privacy_settings.dart",
+        "lib/pages/setting/models/recommend_settings.dart",
+        "lib/pages/setting/models/style_settings.dart",
+        "lib/pages/setting/models/video_settings.dart",
+        "lib/pages/setting/pages/bar_set.dart",
+        "lib/pages/setting/pages/color_select.dart",
+        "lib/pages/setting/pages/display_mode.dart",
+        "lib/pages/setting/pages/font_setting.dart",
+        "lib/pages/setting/pages/fullscreen_sc_size.dart",
+        "lib/pages/setting/pages/logs.dart",
+        "lib/pages/setting/pages/play_speed_set.dart",
+        "lib/pages/setting/slide_color_picker.dart",
+        "lib/pages/setting/view.dart",
+        "lib/pages/setting/widgets/checkbox_num.dart",
+        "lib/pages/setting/widgets/checkbox_num_list_tile.dart",
+        "lib/pages/setting/widgets/dual_slider_dialog.dart",
+        "lib/pages/setting/widgets/multi_select_dialog.dart",
+        "lib/pages/setting/widgets/normal_item.dart",
+        "lib/pages/setting/widgets/ordered_multi_select_dialog.dart",
+        "lib/pages/setting/widgets/popup_item.dart",
+        "lib/pages/setting/widgets/select_dialog.dart",
+        "lib/pages/setting/widgets/slider_dialog.dart",
+        "lib/pages/setting/widgets/switch_item.dart"
+      ]
+    },
+    {
+      "name": "settings_search",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/settings_search/view.dart"
+      ]
+    },
+    {
+      "name": "share",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/share/view.dart"
+      ]
+    },
+    {
+      "name": "space_setting",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/space_setting/controller.dart",
+        "lib/pages/space_setting/view.dart"
+      ]
+    },
+    {
+      "name": "sponsor_block",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/sponsor_block/block_mixin.dart",
+        "lib/pages/sponsor_block/view.dart"
+      ]
+    },
+    {
+      "name": "subscription",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/subscription/controller.dart",
+        "lib/pages/subscription/view.dart",
+        "lib/pages/subscription/widgets/item.dart"
+      ]
+    },
+    {
+      "name": "subscription_detail",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/subscription_detail/controller.dart",
+        "lib/pages/subscription_detail/view.dart",
+        "lib/pages/subscription_detail/widget/sub_video_card.dart"
+      ]
+    },
+    {
+      "name": "video",
+      "status": "partial",
+      "upstream_files": [
+        "lib/pages/video/ai_conclusion/view.dart",
+        "lib/pages/video/controller.dart",
+        "lib/pages/video/download_panel/view.dart",
+        "lib/pages/video/introduction/local/controller.dart",
+        "lib/pages/video/introduction/local/view.dart",
+        "lib/pages/video/introduction/pgc/controller.dart",
+        "lib/pages/video/introduction/pgc/view.dart",
+        "lib/pages/video/introduction/pgc/widgets/intro_detail.dart",
+        "lib/pages/video/introduction/pgc/widgets/pgc_panel.dart",
+        "lib/pages/video/introduction/ugc/controller.dart",
+        "lib/pages/video/introduction/ugc/view.dart",
+        "lib/pages/video/introduction/ugc/widgets/action_item.dart",
+        "lib/pages/video/introduction/ugc/widgets/menu_row.dart",
+        "lib/pages/video/introduction/ugc/widgets/page.dart",
+        "lib/pages/video/introduction/ugc/widgets/season.dart",
+        "lib/pages/video/introduction/ugc/widgets/triple_mixin.dart",
+        "lib/pages/video/medialist/view.dart",
+        "lib/pages/video/member/controller.dart",
+        "lib/pages/video/member/view.dart",
+        "lib/pages/video/note/controller.dart",
+        "lib/pages/video/note/view.dart",
+        "lib/pages/video/pay_coins/view.dart",
+        "lib/pages/video/post_panel/popup_menu_text.dart",
+        "lib/pages/video/post_panel/view.dart",
+        "lib/pages/video/related/controller.dart",
+        "lib/pages/video/related/view.dart",
+        "lib/pages/video/reply/controller.dart",
+        "lib/pages/video/reply/view.dart",
+        "lib/pages/video/reply/vote/reply_vote_item.dart",
+        "lib/pages/video/reply/vote/reply_vote_mixin.dart",
+        "lib/pages/video/reply/widgets/reply_item_grpc.dart",
+        "lib/pages/video/reply/widgets/zan_grpc.dart",
+        "lib/pages/video/reply_new/view.dart",
+        "lib/pages/video/reply_reply/controller.dart",
+        "lib/pages/video/reply_reply/view.dart",
+        "lib/pages/video/reply_search_item/child/controller.dart",
+        "lib/pages/video/reply_search_item/child/view.dart",
+        "lib/pages/video/reply_search_item/child/widgets/item.dart",
+        "lib/pages/video/reply_search_item/controller.dart",
+        "lib/pages/video/reply_search_item/view.dart",
+        "lib/pages/video/send_danmaku/view.dart",
+        "lib/pages/video/view.dart",
+        "lib/pages/video/view_point/view.dart",
+        "lib/pages/video/widgets/header_control.dart",
+        "lib/pages/video/widgets/header_mixin.dart",
+        "lib/pages/video/widgets/intro_layout.dart",
+        "lib/pages/video/widgets/player_focus.dart"
+      ]
+    },
+    {
+      "name": "webdav",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/webdav/view.dart",
+        "lib/pages/webdav/webdav.dart"
+      ]
+    },
+    {
+      "name": "webview",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/webview/view.dart"
+      ]
+    },
+    {
+      "name": "whisper",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/whisper/controller.dart",
+        "lib/pages/whisper/view.dart",
+        "lib/pages/whisper/widgets/item.dart"
+      ]
+    },
+    {
+      "name": "whisper_block",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/whisper_block/controller.dart",
+        "lib/pages/whisper_block/view.dart"
+      ]
+    },
+    {
+      "name": "whisper_detail",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/whisper_detail/controller.dart",
+        "lib/pages/whisper_detail/view.dart",
+        "lib/pages/whisper_detail/widget/chat_item.dart"
+      ]
+    },
+    {
+      "name": "whisper_link_setting",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/whisper_link_setting/controller.dart",
+        "lib/pages/whisper_link_setting/view.dart"
+      ]
+    },
+    {
+      "name": "whisper_secondary",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/whisper_secondary/controller.dart",
+        "lib/pages/whisper_secondary/view.dart"
+      ]
+    },
+    {
+      "name": "whisper_settings",
+      "status": "pending",
+      "upstream_files": [
+        "lib/pages/whisper_settings/controller.dart",
+        "lib/pages/whisper_settings/view.dart",
+        "lib/pages/whisper_settings/widgets/item.dart"
+      ]
+    }
+  ]
+}
