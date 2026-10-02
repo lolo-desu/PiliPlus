@@ -329,6 +329,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         } else if (call.method == 'stopped' && isNativePip) {
           final args = Map<Object?, Object?>.from(call.arguments as Map);
           isNativePip = false;
+          danmakuController?.clear();
           final pos = Duration(
             milliseconds: ((args['position'] as num) * 1000).round(),
           );
