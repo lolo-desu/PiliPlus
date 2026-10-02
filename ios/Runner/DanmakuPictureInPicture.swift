@@ -130,6 +130,7 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
       sourceClock: CMClockGetHostTimeClock(), timebaseOut: &timebase)
     layer.controlTimebase = timebase
     if let timebase { CMTimebaseSetTime(timebase, time: CMTime(seconds: initialPosition, preferredTimescale: 600)) }
+    sourceView.alpha = 1
     sourceView.backgroundColor = .black
     sourceView.isUserInteractionEnabled = false
     layer.frame = sourceView.bounds
@@ -328,6 +329,9 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
   }
   func pictureInPictureControllerDidStartPictureInPicture(_ controller: AVPictureInPictureController) {
     possibleObservation = nil
+    // AVKit consumes the display layer directly; keep its source attached without
+    // covering Flutter controls or pages while the system window is active.
+    sourceView.alpha = 0.001
     let result = pendingResult; pendingResult = nil; result?(nil)
   }
   func pictureInPictureController(_ controller: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
