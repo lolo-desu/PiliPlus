@@ -215,8 +215,9 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
       commentIndex = comments.firstIndex { ($0["time"] as? Double ?? 0) >= position } ?? comments.count
     }
     lastPosition = position
-    if abs(position - lastReported) >= 0.25 || lastReportedPlaying != playing {
-      lastReported = position
+    // Wall-clock polling keeps audio held and controls updated during video stalls.
+    if CACurrentMediaTime() - lastReported >= 0.25 || lastReportedPlaying != playing {
+      lastReported = CACurrentMediaTime()
       lastReportedPlaying = playing
       if let timebase { CMTimebaseSetTime(timebase, time: CMTime(seconds: position, preferredTimescale: 600)) }
       if playing { audio?.rate = video.timeControlStatus == .playing ? speed : 0 }
