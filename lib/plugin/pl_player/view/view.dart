@@ -253,6 +253,15 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   @override
   void initState() {
     super.initState();
+    if (Platform.isIOS) {
+      plPlayerController.pipSourceRect = () {
+        final box = _playerKey.currentContext?.findRenderObject();
+        return box is RenderBox && box.hasSize
+            ? box.localToGlobal(Offset.zero) & box.size
+            : null;
+      };
+    }
+
     addObserverMobile(this);
 
     _controlsListener = plPlayerController.showControls.listen(
@@ -330,6 +339,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (plPlayerController.isNativePip) return;
     if (!plPlayerController.continuePlayInBackground.value) {
       late final player = plPlayerController.videoPlayerController;
       if (const <AppLifecycleState>[.paused, .detached].contains(state)) {

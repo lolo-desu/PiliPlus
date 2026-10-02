@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:io' show Platform;
+
+import 'package:PiliPlus/common/widgets/ios_glass_surface.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -74,6 +77,8 @@ class FloatingNavigationBar extends StatelessWidget {
 
     final padding = MediaQuery.viewPaddingOf(context);
 
+    Widget surface(Widget child) =>
+        Platform.isIOS ? IosGlassSurface(radius: 32, child: child) : child;
     return Padding(
       padding: .fromLTRB(
         padding.left,
@@ -81,54 +86,60 @@ class FloatingNavigationBar extends StatelessWidget {
         padding.right,
         bottomPadding + padding.bottom,
       ),
-      child: SizedBox(
-        height: _kNavigationHeight,
-        width: destinations.length * _kIndicatorWidth,
-        child: DecoratedBox(
-          decoration: ShapeDecoration(
-            color: ElevationOverlay.applySurfaceTint(
-              backgroundColor ??
-                  navigationBarTheme.backgroundColor ??
-                  defaults.backgroundColor!,
-              surfaceTintColor ??
-                  navigationBarTheme.surfaceTintColor ??
-                  defaults.surfaceTintColor,
-              elevation ?? navigationBarTheme.elevation ?? defaults.elevation!,
-            ),
-            shape: RoundedSuperellipseBorder(
-              side: defaults.borderSide,
-              borderRadius: _kBorderRadius,
-            ),
-          ),
-          child: Padding(
-            padding: _kIndicatorPadding,
-            child: Row(
-              crossAxisAlignment: .stretch,
-              children: <Widget>[
-                for (int i = 0; i < destinations.length; i++)
-                  Expanded(
-                    child: _SelectableAnimatedBuilder(
-                      duration: animationDuration,
-                      isSelected: i == selectedIndex,
-                      builder: (context, animation) {
-                        return _NavigationDestinationInfo(
-                          index: i,
-                          selectedIndex: selectedIndex,
-                          totalNumberOfDestinations: destinations.length,
-                          selectedAnimation: animation,
-                          labelBehavior: effectiveLabelBehavior,
-                          indicatorColor: indicatorColor,
-                          indicatorShape: indicatorShape,
-                          overlayColor: overlayColor,
-                          onTap: _handleTap(i),
-                          labelTextStyle: labelTextStyle,
-                          labelPadding: labelPadding,
-                          child: destinations[i],
-                        );
-                      },
+      child: surface(
+        SizedBox(
+          height: _kNavigationHeight,
+          width: destinations.length * _kIndicatorWidth,
+          child: DecoratedBox(
+            decoration: ShapeDecoration(
+              color: Platform.isIOS
+                  ? Colors.transparent
+                  : ElevationOverlay.applySurfaceTint(
+                      backgroundColor ??
+                          navigationBarTheme.backgroundColor ??
+                          defaults.backgroundColor!,
+                      surfaceTintColor ??
+                          navigationBarTheme.surfaceTintColor ??
+                          defaults.surfaceTintColor,
+                      elevation ??
+                          navigationBarTheme.elevation ??
+                          defaults.elevation!,
                     ),
-                  ),
-              ],
+              shape: RoundedSuperellipseBorder(
+                side: defaults.borderSide,
+                borderRadius: _kBorderRadius,
+              ),
+            ),
+            child: Padding(
+              padding: _kIndicatorPadding,
+              child: Row(
+                crossAxisAlignment: .stretch,
+                children: <Widget>[
+                  for (int i = 0; i < destinations.length; i++)
+                    Expanded(
+                      child: _SelectableAnimatedBuilder(
+                        duration: animationDuration,
+                        isSelected: i == selectedIndex,
+                        builder: (context, animation) {
+                          return _NavigationDestinationInfo(
+                            index: i,
+                            selectedIndex: selectedIndex,
+                            totalNumberOfDestinations: destinations.length,
+                            selectedAnimation: animation,
+                            labelBehavior: effectiveLabelBehavior,
+                            indicatorColor: indicatorColor,
+                            indicatorShape: indicatorShape,
+                            overlayColor: overlayColor,
+                            onTap: _handleTap(i),
+                            labelTextStyle: labelTextStyle,
+                            labelPadding: labelPadding,
+                            child: destinations[i],
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -538,10 +549,7 @@ class _NavigationDestinationLayoutDelegate extends MultiChildLayoutDelegate {
 
     positionChild(
       iconId,
-      Offset(
-        halfWidth(size) - halfWidth(iconSize),
-        iconYPosition,
-      ),
+      Offset(halfWidth(size) - halfWidth(iconSize), iconYPosition),
     );
 
     positionChild(

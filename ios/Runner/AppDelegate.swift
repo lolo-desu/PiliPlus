@@ -3,6 +3,8 @@ import UIKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+  private var danmakuPip: AnyObject?
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -13,5 +15,10 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "PiliPlusIOS")!
+    registrar.register(LiquidGlassFactory(), withId: "piliplus/liquid_glass")
+    if #available(iOS 15.0, *) {
+      danmakuPip = DanmakuPictureInPicture(messenger: registrar.messenger())
+    }
   }
 }

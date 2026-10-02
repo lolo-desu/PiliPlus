@@ -4,6 +4,7 @@ import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/floating_navigation_bar.dart';
+import 'package:PiliPlus/common/widgets/ios_glass_surface.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/main_layout.dart';
@@ -378,14 +379,14 @@ class _MainAppState extends PopScopeState<MainApp>
         );
       }
 
+      if (Platform.isIOS && !_mainController.floatingNavBar) {
+        bottomNav = IosGlassSurface(radius: 0, child: bottomNav);
+      }
       if (_mainController.hideBottomBar) {
         if (_mainController.barOffset case final barOffset?) {
           return Obx(
             () => FractionalTranslation(
-              translation: Offset(
-                0.0,
-                barOffset.value / Style.topBarHeight,
-              ),
+              translation: Offset(0.0, barOffset.value / Style.topBarHeight),
               child: bottomNav,
             ),
           );
@@ -433,10 +434,7 @@ class _MainAppState extends PopScopeState<MainApp>
                         (e) => NavigationDrawerDestination(
                           label: Text(e.label),
                           icon: _buildIcon(type: e),
-                          selectedIcon: _buildIcon(
-                            type: e,
-                            selected: true,
-                          ),
+                          selectedIcon: _buildIcon(type: e, selected: true),
                         ),
                       )
                       .toList(),
@@ -550,19 +548,17 @@ class _MainAppState extends PopScopeState<MainApp>
   Widget _buildIcon({required NavigationBarType type, bool selected = false}) {
     final icon = selected ? type.selectIcon : type.icon;
     return type == .dynamics
-        ? Obx(
-            () {
-              final dynCount = _mainController.dynCount.value;
-              return Badge(
-                isLabelVisible: dynCount > 0,
-                label: _mainController.dynamicBadgeMode == .number
-                    ? Text(dynCount.toString())
-                    : null,
-                padding: const .symmetric(horizontal: 6),
-                child: icon,
-              );
-            },
-          )
+        ? Obx(() {
+            final dynCount = _mainController.dynCount.value;
+            return Badge(
+              isLabelVisible: dynCount > 0,
+              label: _mainController.dynamicBadgeMode == .number
+                  ? Text(dynCount.toString())
+                  : null,
+              padding: const .symmetric(horizontal: 6),
+              child: icon,
+            );
+          })
         : icon;
   }
 
@@ -574,10 +570,7 @@ class _MainAppState extends PopScopeState<MainApp>
         msgBadge(_mainController),
         IconButton(
           tooltip: '搜索',
-          icon: const Icon(
-            Icons.search_outlined,
-            semanticLabel: '搜索',
-          ),
+          icon: const Icon(Icons.search_outlined, semanticLabel: '搜索'),
           onPressed: () => Get.toNamed('/search'),
         ),
       ],

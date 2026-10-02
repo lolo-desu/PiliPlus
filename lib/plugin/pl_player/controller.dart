@@ -39,6 +39,8 @@ import 'package:PiliPlus/utils/extension/box_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
+import 'package:PiliPlus/utils/ios/pip_bridge.dart';
+import 'package:PiliPlus/plugin/pl_player/utils/danmaku_options.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
@@ -84,8 +86,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   final RxInt seekPosition = RxInt(0);
   int get progress => isSeeking.value ? seekPosition.value : position.value;
 
-  int get positionInMilliseconds =>
-      videoPlayerController?.state.position.inMilliseconds ?? 0;
+  int get positionInMilliseconds => isNativePip
+      ? (_nativePosition * 1000).round()
+      : videoPlayerController?.state.position.inMilliseconds ?? 0;
 
   final RxInt buffered = RxInt(0);
 
@@ -282,7 +285,104 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     return routeName == '/videoV' || routeName == '/liveRoom';
   }
 
+  Rect? Function()? pipSourceRect;
+  bool isNativePip = false;
+  bool _startingNativePip = false;
+  double _nativePosition = 0;
+  int _nativeDmSegment = -1;
+  Future<List<Map<String, Object?>>> Function(int)? pipDanmakuProvider;
+
+  Future<void> _startIosPip() async {
+    if (isNativePip || _startingNativePip || videoPlayerController == null) {
+      return;
+    }
+    _startingNativePip = true;
+    final wasPlaying = playerStatus.isPlaying;
+    final start = videoPlayerController!.state.position;
+    try {
+      IosPipBridge.initialize();
+      final comments = !pipNoDanmaku && enableShowDanmakuAdaptive.value
+          ? await pipDanmakuProvider?.call(start.inMilliseconds) ??
+                <Map<String, Object?>>[]
+          : <Map<String, Object?>>[];
+      IosPipBridge.onEvent = (call) async {
+        if (call.method == 'position' && isNativePip) {
+          final args = Map<Object?, Object?>.from(call.arguments as Map);
+          _nativePosition = (args['position'] as num).toDouble();
+          final pos = Duration(milliseconds: (_nativePosition * 1000).round());
+          position.value = pos.inSeconds;
+          playerStatus.value = args['playing'] == true ? .playing : .paused;
+          videoPlayerServiceHandler?.onPositionChange(pos);
+          makeHeartBeat(pos.inSeconds);
+          final segment = pos.inMilliseconds ~/ 360000;
+          if (segment != _nativeDmSegment &&
+              !pipNoDanmaku &&
+              enableShowDanmakuAdaptive.value) {
+            _nativeDmSegment = segment;
+            final items = await pipDanmakuProvider?.call(pos.inMilliseconds);
+            if (items != null && isNativePip) {
+              await IosPipBridge.updateDanmaku(items);
+            }
+          }
+        } else if (call.method == 'stopped' && isNativePip) {
+          final args = Map<Object?, Object?>.from(call.arguments as Map);
+          isNativePip = false;
+          final pos = Duration(
+            milliseconds: ((args['position'] as num) * 1000).round(),
+          );
+          await _videoPlayerController?.seek(pos);
+          if (args['playing'] == true) {
+            await play();
+          } else {
+            playerStatus.value = .paused;
+          }
+        } else if (call.method == 'error') {
+          SmartDialog.showToast(call.arguments.toString());
+        }
+      };
+      // Pause mpv without releasing the audio session while native AVKit takes over.
+      await _videoPlayerController!.pause();
+      isNativePip = true;
+      _nativePosition = start.inMilliseconds / 1000;
+      _nativeDmSegment = start.inMilliseconds ~/ 360000;
+      final sourceRect = pipSourceRect?.call();
+      await IosPipBridge.start({
+        if (sourceRect != null)
+          'rect': [
+            sourceRect.left,
+            sourceRect.top,
+            sourceRect.width,
+            sourceRect.height,
+          ],
+        'video': dataSource.videoSource,
+        'audio': dataSource.audioSource,
+        'position': start.inMilliseconds / 1000,
+        'duration': durationInMilliseconds / 1000,
+        'speed': playbackSpeed,
+        'playing': wasPlaying,
+        'live': isLive,
+        'aspect': (width ?? 16) / (height == null || height == 0 ? 9 : height!),
+        'headers': {'User-Agent': BrowserUa.pc, 'Referer': HttpString.baseUrl},
+        'comments': comments,
+        'opacity': danmakuOpacity.value,
+        'fontScale': DanmakuOptions.danmakuFontScale,
+        'area': DanmakuOptions.danmakuShowArea,
+      });
+    } catch (error) {
+      isNativePip = false;
+      IosPipBridge.onEvent = null;
+      if (wasPlaying) await play();
+      SmartDialog.showToast('画中画无法启动：$error');
+    } finally {
+      _startingNativePip = false;
+    }
+  }
+
   void enterPip({bool autoEnter = false}) {
+    if (Platform.isIOS) {
+      _startIosPip();
+      return;
+    }
     if (videoPlayerController case NativePlayer(:final state)) {
       PageUtils.enterPip(
         autoEnter: autoEnter,
@@ -771,6 +871,10 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     Duration? seekTo,
     Volume? volume,
   ) async {
+    if (isNativePip || _startingNativePip) {
+      isNativePip = false;
+      await IosPipBridge.dispose();
+    }
     isBuffering.value = false;
     _heartDuration = 0;
     danmakuController?.clear();
@@ -821,11 +925,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
     assert(!isLive || seekTo == null);
     await player.open(
-      Media(
-        video,
-        start: seekTo,
-        extras: extras.isEmpty ? null : extras,
-      ),
+      Media(video, start: seekTo, extras: extras.isEmpty ? null : extras),
       play: false,
     );
   }
@@ -896,6 +996,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     _subscriptions = [
       /// playing
       stream.playing.listen((bool playing) {
+        if (isNativePip) return;
         if (playing) {
           _stopWakeLockTimer();
           WakelockPlus.enable();
@@ -950,6 +1051,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
       /// position
       stream.position.listen((Duration position) {
+        if (isNativePip) return;
         final posInSeconds = position.inSeconds;
 
         if (posInSeconds != this.position.value) {
@@ -1064,6 +1166,13 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   /// 跳转至指定位置
   Future<void> seekTo(Duration position, {bool isSeek = true}) async {
+    if (isNativePip) {
+      await IosPipBridge.channel.invokeMethod<void>(
+        'seek',
+        position.inMilliseconds / 1000,
+      );
+      return;
+    }
     if (_playerCount == 0) {
       return;
     }
@@ -1099,6 +1208,11 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   /// 设置倍速
   Future<void> setPlaybackSpeed(double speed) async {
+    if (isNativePip) {
+      _playbackSpeed.value = speed;
+      await IosPipBridge.channel.invokeMethod<void>('speed', speed);
+      return;
+    }
     lastPlaybackSpeed = playbackSpeed;
 
     if (speed == _videoPlayerController?.state.rate) {
@@ -1131,6 +1245,11 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   /// 播放视频
   Future<void> play({bool repeat = false, bool hideControls = true}) async {
+    if (isNativePip) {
+      if (repeat) await IosPipBridge.channel.invokeMethod<void>('seek', 0.0);
+      await IosPipBridge.channel.invokeMethod<void>('playing', true);
+      return;
+    }
     if (_playerCount == 0) return;
     // 播放时自动隐藏控制条
     controls = !hideControls;
@@ -1150,6 +1269,10 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   /// 暂停播放
   Future<void> pause({bool notify = true, bool isInterrupt = false}) async {
+    if (isNativePip) {
+      await IosPipBridge.channel.invokeMethod<void>('playing', false);
+      return;
+    }
     await _videoPlayerController?.pause();
     playerStatus.value = PlayerStatus.paused;
 
@@ -1556,6 +1679,10 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     }
 
     _playerCount = 0;
+    if (Platform.isIOS) {
+      isNativePip = false;
+      IosPipBridge.dispose();
+    }
     if (removeSafeArea) {
       showSystemBar();
     }

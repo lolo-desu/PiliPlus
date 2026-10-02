@@ -14,6 +14,7 @@ jobs:
   build-macos-app:
     name: Release IOS
     runs-on: macos-26
+    timeout-minutes: 60
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -34,13 +35,19 @@ jobs:
         shell: pwsh
         run: lib/scripts/patch.ps1 iOS
 
+      - name: Analyze iOS changes
+        run: dart analyze --fatal-infos lib/utils/ios lib/common/widgets/ios_glass_surface.dart lib/utils/theme_utils.dart lib/pages/danmaku/controller.dart
+
       - name: Build iOS
         run: |
           flutter build ios --release --no-codesign --dart-define-from-file=pili_release.json --no-pub
-          ln -sf ./build/ios/iphoneos Payload
-          # make AltSign happy...
-          find Payload/Runner.app/Frameworks -type d -name "*.framework" -exec codesign --force --sign - --preserve-metadata=identifier,entitlements {} \;
-          zip -r9 PiliPlus_ios_${{env.version}}.ipa Payload/Runner.app
+          mkdir -p Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/
+          # No certificate, profile or ad-hoc signing: user signs all nested code.
+          find Payload -name _CodeSignature -type d -prune -exec rm -rf {} +
+          find Payload -name embedded.mobileprovision -delete
+          zip -r9 PiliPlus_ios_glass_unsigned_${{env.version}}.ipa Payload
+          unzip -t PiliPlus_ios_glass_unsigned_${{env.version}}.ipa
 
       - name: Release
         if: ${{ github.event.inputs.tag != '' }}
@@ -49,11 +56,10 @@ jobs:
           tag_name: ${{ github.event.inputs.tag }}
           name: ${{ github.event.inputs.tag }}
           files: |
-            PiliPlus_ios_*.ipa
+            PiliPlus_ios_glass_unsigned_*.ipa
 
       - name: Upload ios release
         uses: actions/upload-artifact@v7
         with:
-          archive: false
-          name: iOS-release
-          path: PiliPlus_ios_*.ipa
+          name: iOS-glass-unsigned
+          path: PiliPlus_ios_glass_unsigned_*.ipa

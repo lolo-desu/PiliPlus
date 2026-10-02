@@ -1,8 +1,11 @@
+import 'dart:io' show Platform;
+
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/font_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
-import 'package:cupertino_ui/cupertino_ui.dart' show CupertinoThemeData;
+import 'package:cupertino_ui/cupertino_ui.dart'
+    show CupertinoThemeData, CupertinoPageTransitionsBuilder;
 import 'package:flutter/foundation.dart' show PlatformDispatcher;
 import 'package:material_ui/material_ui.dart';
 
@@ -160,11 +163,50 @@ abstract final class ThemeUtils {
         ),
       ),
       pageTransitionsTheme: const PageTransitionsTheme(
-        builders: {
-          TargetPlatform.android: ZoomPageTransitionsBuilder(),
-        },
+        builders: {TargetPlatform.android: ZoomPageTransitionsBuilder()},
       ),
     );
+    if (Platform.isIOS) {
+      final iosTheme = theme.copyWith(
+        scaffoldBackgroundColor: isDark
+            ? const Color(0xFF000000)
+            : const Color(0xFFF2F2F7),
+        navigationBarTheme: theme.navigationBarTheme.copyWith(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          indicatorColor: colorScheme.primary.withValues(alpha: 0.14),
+        ),
+        bottomNavigationBarTheme: theme.bottomNavigationBarTheme.copyWith(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        cardTheme: theme.cardTheme.copyWith(
+          elevation: 0,
+          color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        dialogTheme: theme.dialogTheme.copyWith(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
+        ),
+        popupMenuTheme: theme.popupMenuTheme.copyWith(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.android: ZoomPageTransitionsBuilder(),
+          },
+        ),
+      );
+      return isDark && Pref.isPureBlackTheme ? darkenTheme(iosTheme) : iosTheme;
+    }
     if (isDark && Pref.isPureBlackTheme) {
       return darkenTheme(theme);
     }
@@ -177,16 +219,12 @@ abstract final class ThemeUtils {
     return theme.copyWith(
       canvasColor: Colors.black,
       scaffoldBackgroundColor: Colors.black,
-      appBarTheme: theme.appBarTheme.copyWith(
-        backgroundColor: Colors.black,
-      ),
+      appBarTheme: theme.appBarTheme.copyWith(backgroundColor: Colors.black),
       cardTheme: theme.cardTheme.copyWith(
         color: colorScheme.surfaceContainer.darken(0.75),
       ),
       dialogTheme: theme.dialogTheme.copyWith(backgroundColor: color),
-      bottomSheetTheme: theme.bottomSheetTheme.copyWith(
-        backgroundColor: color,
-      ),
+      bottomSheetTheme: theme.bottomSheetTheme.copyWith(backgroundColor: color),
       bottomNavigationBarTheme: theme.bottomNavigationBarTheme.copyWith(
         backgroundColor: color,
       ),

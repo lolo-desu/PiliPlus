@@ -1923,7 +1923,7 @@ class HeaderControlState extends State<HeaderControl>
                   ),
                 ),
               ),
-              if (Platform.isAndroid ||
+              if (Platform.isAndroid || Platform.isIOS ||
                   (PlatformUtils.isDesktop && !isFullScreen))
                 SizedBox(
                   width: btnWidth,
@@ -1936,7 +1936,7 @@ class HeaderControlState extends State<HeaderControl>
                         plPlayerController.toggleDesktopPip();
                         return;
                       }
-                      if (AndroidHelper.isPipAvailable) {
+                      if (Platform.isIOS || AndroidHelper.isPipAvailable) {
                         plPlayerController.enterPip();
                       }
                     },
