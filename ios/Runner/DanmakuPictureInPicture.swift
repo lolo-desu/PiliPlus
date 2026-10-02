@@ -12,7 +12,8 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
   private let channel: FlutterMethodChannel
   private let layer = AVSampleBufferDisplayLayer()
   private let sourceView = UIView()
-  private let ciContext = CIContext(options: [.cacheIntermediates: false])
+  // UIKit rendering apps cannot rely on GPU access while backgrounded.
+  private let ciContext = CIContext(options: [.useSoftwareRenderer: true, .cacheIntermediates: false])
   private var pip: AVPictureInPictureController?
   private var video: AVPlayer?
   private var audio: AVPlayer?
@@ -107,8 +108,8 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
       try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
       try AVAudioSession.sharedInstance().setActive(true)
     } catch { fail("音频会话启动失败：\(error.localizedDescription)"); return }
-    let width: CGFloat = 640
     let ratio = max(0.3, min(3, (args["aspect"] as? NSNumber)?.doubleValue ?? 16.0 / 9.0))
+    let width = CGFloat(Int(640 * min(1, ratio)) / 2 * 2)
     let height = CGFloat(Int(width / ratio) / 2 * 2)
     CVPixelBufferPoolCreate(nil, nil, [
       kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
