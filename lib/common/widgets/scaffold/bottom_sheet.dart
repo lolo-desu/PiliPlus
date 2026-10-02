@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/ios_glass_surface.dart';
 import 'package:flutter/gestures.dart' show VerticalDragGestureRecognizer;
 import 'package:material_ui/material_ui.dart';
 
@@ -65,6 +66,8 @@ class _MiniBottomSheetState extends BottomSheetState {
         child: ConstrainedBox(constraints: constraints, child: bottomSheet),
       );
     }
+
+    bottomSheet = IosGlassPanel(child: bottomSheet);
 
     if (widget.enableDrag) {
       return Listener(

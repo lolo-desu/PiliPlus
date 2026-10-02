@@ -17,6 +17,22 @@ private struct GlassMaterial: View {
 }
 
 final class LiquidGlassFactory: NSObject, FlutterPlatformViewFactory {
+  private let channel: FlutterMethodChannel
+  private var observer: NSObjectProtocol?
+  init(messenger: FlutterBinaryMessenger) {
+    channel = FlutterMethodChannel(name: "piliplus/ios_glass", binaryMessenger: messenger)
+    super.init()
+    channel.setMethodCallHandler { call, result in
+      if call.method == "reduceTransparency" { result(UIAccessibility.isReduceTransparencyEnabled) }
+      else { result(FlutterMethodNotImplemented) }
+    }
+    observer = NotificationCenter.default.addObserver(
+      forName: UIAccessibility.reduceTransparencyStatusDidChangeNotification,
+      object: nil, queue: .main) { [weak self] _ in
+        self?.channel.invokeMethod("reduceTransparency", arguments: UIAccessibility.isReduceTransparencyEnabled)
+      }
+  }
+  deinit { if let observer { NotificationCenter.default.removeObserver(observer) } }
   func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol { FlutterStandardMessageCodec.sharedInstance() }
   func create(withFrame frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?) -> FlutterPlatformView {
     LiquidGlassView(frame: frame, arguments: args)

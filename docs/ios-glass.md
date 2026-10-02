@@ -3,7 +3,8 @@
 This branch is based on upstream-style `main`, not the Linux presentation branches.
 The existing navigation variant, destination ordering, unread badges, home tabs,
 page structure, theme accent preference and player gestures are retained. iOS uses
-native SwiftUI Liquid Glass behind the existing navigation controls, rounded
+native SwiftUI Liquid Glass behind navigation, top bars and player comment
+panels, lightweight blurred video cards, rounded
 surfaces and Cupertino page transitions. iOS 26+ uses `glassEffect`; earlier iOS
 uses an ultra-thin material fallback. Reduce Transparency and high contrast use
 an opaque material. iOS 27 follows the same API availability path; device behavior
@@ -15,9 +16,10 @@ On a playing video, reveal the existing player controls and tap the picture in
 picture icon. You can then open another app. Close/restore the system window to
 return playback to PiliPlus at the same time and rate. System play/pause and skip
 controls affect the native PiP player; existing foreground controls are forwarded
-while it owns playback. Native playback decodes the original video URL with the
-same Referer and User-Agent and independently plays the separate audio URL when
-present. No screen recording permission is needed.
+while it owns playback. PiP automatically selects an H.264 video and AAC audio stream, prioritizing
+the current quality and retrying available qualities and CDN URLs on startup
+failure. This selection does not change the main player codec preference.
+Native playback retains the same Referer and User-Agent. No screen recording permission is needed.
 
 Timestamped comments are preloaded from the existing danmaku service after its
 account and rule filtering. The current and next six-minute segment are retained
@@ -26,8 +28,9 @@ font scale, minimum weight, and scrolling/top/bottom blocking preferences carry
 into PiP. The native compositor draws comments directly into the decoded video
 frames before submitting them to AVKit's sample-buffer PiP display layer.
 
-Limits: PiP requires iOS 15+ and a codec/stream AVFoundation can decode (prefer
-H.264 + AAC if a selected format fails). This first version adds PiP for on-demand
+Limits: PiP requires iOS 15+ and a stream AVFoundation can decode. Network
+videos use automatic compatibility selection; cached files cannot be transcoded
+and must already use a supported encoding. This first version adds PiP for on-demand
 video, manually from the player; automatic background entry and live-room PiP
 are not added. Advanced mode-7 comments, VIP gradient effects and AI occlusion
 masks remain available in the original full player, but are not drawn in PiP.

@@ -52,7 +52,8 @@ import 'package:archive/archive.dart' show getCrc32;
 import 'package:canvas_danmaku/canvas_danmaku.dart';
 import 'package:easy_debounce/easy_throttle.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:flutter/services.dart' show HapticFeedback, DeviceOrientation;
+import 'package:flutter/services.dart'
+    show HapticFeedback, DeviceOrientation, PlatformException;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:get/get.dart';
@@ -285,6 +286,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     return routeName == '/videoV' || routeName == '/liveRoom';
   }
 
+  Future<List<DataSource>> Function()? pipSourceProvider;
   Rect? Function()? pipSourceRect;
   bool isNativePip = false;
   bool _startingNativePip = false;
@@ -302,6 +304,21 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     final start = videoPlayerController!.state.position;
     try {
       IosPipBridge.initialize();
+      List<DataSource> compatible = [];
+      if (source is NetworkSource) {
+        try {
+          compatible = await pipSourceProvider?.call() ?? [];
+        } catch (_) {}
+      }
+      final candidates = <DataSource>[
+        ...compatible,
+        if (!compatible.any(
+          (candidate) =>
+              candidate.videoSource == source.videoSource &&
+              candidate.audioSource == source.audioSource,
+        ))
+          source,
+      ];
       final comments = !pipNoDanmaku && enableShowDanmakuAdaptive.value
           ? await pipDanmakuProvider?.call(start.inMilliseconds) ??
                 <Map<String, Object?>>[]
@@ -351,7 +368,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       _nativePosition = start.inMilliseconds / 1000;
       _nativeDmSegment = start.inMilliseconds ~/ 360000;
       final sourceRect = pipSourceRect?.call();
-      await IosPipBridge.start({
+      Future<void> startNative(DataSource candidate) => IosPipBridge.start({
         if (sourceRect != null)
           'rect': [
             sourceRect.left,
@@ -359,8 +376,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
             sourceRect.width,
             sourceRect.height,
           ],
-        'video': source.videoSource,
-        'audio': source.audioSource,
+        'video': candidate.videoSource,
+        'audio': candidate.audioSource,
         'position': start.inMilliseconds / 1000,
         'duration': durationInMilliseconds / 1000,
         'speed': playbackSpeed,
@@ -374,6 +391,22 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         'fontScale': DanmakuOptions.danmakuFontScale,
         'area': DanmakuOptions.danmakuShowArea,
       });
+      Object? lastError;
+      for (final candidate in candidates) {
+        if (_playerCount == 0 || !identical(dataSource, source)) return;
+        try {
+          await startNative(candidate);
+          lastError = null;
+          break;
+        } catch (error) {
+          lastError = error;
+          if (error is PlatformException &&
+              !const {'pip_failed', 'decode'}.contains(error.code)) {
+            rethrow;
+          }
+        }
+      }
+      if (lastError != null) throw lastError;
     } catch (error) {
       if (_playerCount == 0 || !identical(dataSource, source)) return;
       isNativePip = false;

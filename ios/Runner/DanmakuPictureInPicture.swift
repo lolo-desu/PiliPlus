@@ -155,7 +155,7 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
     }
     // Decode/network failures must return playback ownership to Flutter.
     DispatchQueue.main.asyncAfter(deadline: .now() + 20) { [weak self] in
-      if self?.sessionID == currentSessionID && self?.pendingResult != nil { self?.fail("画中画启动超时，请尝试其他画质或编码") }
+      if self?.sessionID == currentSessionID && self?.pendingResult != nil { self?.fail("当前播放源启动超时") }
     }
   }
 
@@ -164,7 +164,7 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
   }
   private func prepareWhenReady() {
     if video?.currentItem?.status == .failed || audio?.currentItem?.status == .failed {
-      fail("当前视频或音频编码无法由 iOS 画中画播放，请切换为 H.264/AAC"); return
+      fail("当前播放源解码失败"); return
     }
     guard !prepared, video?.currentItem?.status == .readyToPlay,
       audio == nil || audio?.currentItem?.status == .readyToPlay else { return }

@@ -1,3 +1,5 @@
+import 'package:PiliPlus/common/widgets/ios_glass_surface.dart';
+
 import 'dart:math';
 
 import 'package:PiliPlus/common/widgets/fractionally_sized_box.dart';
@@ -479,7 +481,7 @@ abstract final class PageUtils {
               alignment: isPortrait ? .bottomCenter : .centerRight,
               child: Padding(
                 padding: isPortrait ? padding?.call() ?? .zero : .zero,
-                child: child,
+                child: IosGlassPanel(child: child),
               ),
             ),
           );

@@ -1,3 +1,6 @@
+import 'dart:io' show Platform;
+
+import 'package:PiliPlus/common/widgets/ios_glass_surface.dart';
 /*
  * This file is part of PiliPlus
  *
@@ -137,14 +140,17 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
         automaticallyImplyActions: automaticallyImplyActions,
         flexibleSpace: IgnorePointer(
           ignoring: isScrolledUnder,
-          child: DynamicFlexibleSpaceBar(background: flexibleSpace),
+          child: IosGlassSurface.wrap(
+            DynamicFlexibleSpaceBar(background: flexibleSpace),
+            radius: 0,
+          ),
         ),
         bottom: bottom,
         elevation: isScrolledUnder ? elevation : 0.0,
         scrolledUnderElevation: scrolledUnderElevation,
         shadowColor: shadowColor,
         surfaceTintColor: surfaceTintColor,
-        backgroundColor: backgroundColor,
+        backgroundColor: Platform.isIOS ? Colors.transparent : backgroundColor,
         foregroundColor: foregroundColor,
         iconTheme: iconTheme,
         actionsIconTheme: actionsIconTheme,

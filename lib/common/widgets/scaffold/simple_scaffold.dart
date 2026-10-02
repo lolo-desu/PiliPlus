@@ -1,3 +1,7 @@
+import 'dart:io' show Platform;
+
+import 'package:PiliPlus/common/widgets/ios_glass_surface.dart';
+
 import 'dart:math' as math;
 
 import 'package:PiliPlus/common/widgets/slotted_layout_helper.dart';
@@ -24,7 +28,22 @@ class SimpleScaffold extends StatelessWidget {
       color: backgroundColor,
       child: ScaffoldLayout(
         fab: fab,
-        appBar: appBar,
+        appBar: appBar == null
+            ? null
+            : IosGlassSurface.wrap(
+                Theme(
+                  data: Platform.isIOS
+                      ? Theme.of(context).copyWith(
+                          appBarTheme: Theme.of(context).appBarTheme.copyWith(
+                            backgroundColor: Colors.transparent,
+                            surfaceTintColor: Colors.transparent,
+                          ),
+                        )
+                      : Theme.of(context),
+                  child: appBar!,
+                ),
+                radius: 0,
+              ),
         body: body,
       ),
     );

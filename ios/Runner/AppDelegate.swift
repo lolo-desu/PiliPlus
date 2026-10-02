@@ -16,7 +16,7 @@ import UIKit
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "PiliPlusIOS")!
-    registrar.register(LiquidGlassFactory(), withId: "piliplus/liquid_glass")
+    registrar.register(LiquidGlassFactory(messenger: registrar.messenger()), withId: "piliplus/liquid_glass")
     if #available(iOS 15.0, *) {
       danmakuPip = DanmakuPictureInPicture(messenger: registrar.messenger())
     }

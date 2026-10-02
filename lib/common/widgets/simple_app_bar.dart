@@ -1,3 +1,6 @@
+import 'dart:io' show Platform;
+
+import 'package:PiliPlus/common/widgets/ios_glass_surface.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 import 'package:material_ui/material_ui.dart';
@@ -29,9 +32,12 @@ class SimpleAppBar extends StatelessWidget {
         systemNavigationBarColor: Colors.transparent,
         systemNavigationBarIconBrightness: brightness.reverse,
       ),
-      child: ColoredBox(
-        color: backgroundColor,
-        child: SizedBox(height: height, width: .infinity),
+      child: IosGlassSurface.wrap(
+        ColoredBox(
+          color: Platform.isIOS ? Colors.transparent : backgroundColor,
+          child: SizedBox(height: height, width: .infinity),
+        ),
+        radius: 0,
       ),
     );
   }

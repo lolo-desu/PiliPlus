@@ -1,3 +1,5 @@
+import 'package:PiliPlus/utils/ios/pip_sources.dart';
+
 import 'dart:async';
 import 'dart:math' show min;
 import 'dart:ui';
@@ -356,6 +358,7 @@ class VideoDetailController extends GetxController
   @override
   void onInit() {
     super.onInit();
+    plPlayerController.pipSourceProvider = _compatiblePipSources;
     args = Get.arguments;
     videoType = args['videoType'];
     if (videoType == VideoType.pgc) {
@@ -644,6 +647,43 @@ class VideoDetailController extends GetxController
     if (isPlaying) {
       plPlayerController.play();
     }
+  }
+
+  Future<List<DataSource>> _compatiblePipSources() async {
+    if (isFileSource) return [];
+    final originalCid = cid.value;
+    final quality = currentVideoQa.value?.code ?? 80;
+    var model = data;
+    var videos = compatiblePipVideos(model.dash?.video ?? [], quality);
+    var audio = compatiblePipAudio(model.dash?.audio ?? []);
+    if (videos.isEmpty || (audio == null && audioUrl?.isNotEmpty == true)) {
+      for (final qn in {quality, 80}) {
+        final result = await _getVideoUrl(qn);
+        if (cid.value != originalCid) return [];
+        if (result case Success(:final response)) {
+          model = response;
+          videos = compatiblePipVideos(model.dash?.video ?? [], quality);
+          audio = compatiblePipAudio(model.dash?.audio ?? []);
+          if (videos.isNotEmpty &&
+              (audio != null || audioUrl?.isNotEmpty != true)) {
+            break;
+          }
+        }
+      }
+    }
+    return [
+      for (final video in videos.take(3))
+        for (final url in <String>{
+          VideoUtils.getCdnUrl(video.playUrls),
+          ...video.playUrls,
+        }.take(2))
+          NetworkSource(
+            videoSource: url,
+            audioSource: audio == null
+                ? audioUrl
+                : VideoUtils.getCdnUrl(audio.playUrls, isAudio: true),
+          ),
+    ];
   }
 
   VideoItem findVideoByQa(int qa, {bool setCodecs = false}) {
@@ -1246,6 +1286,9 @@ class VideoDetailController extends GetxController
 
   @override
   void onClose() {
+    if (plPlayerController.pipSourceProvider == _compatiblePipSources) {
+      plPlayerController.pipSourceProvider = null;
+    }
     cid.close();
     if (isFileSource) {
       cacheLocalProgress();
