@@ -35,6 +35,14 @@ jobs:
         shell: pwsh
         run: lib/scripts/patch.ps1 iOS
 
+      - name: Typecheck native glass and PiP APIs
+        run: |
+          flutter precache --ios
+          xcrun swiftc -typecheck -sdk "$(xcrun --sdk iphoneos --show-sdk-path)" \
+            -target arm64-apple-ios15.0 \
+            -F "$FLUTTER_ROOT/bin/cache/artifacts/engine/ios-release/Flutter.xcframework/ios-arm64" \
+            ios/Runner/LiquidGlassView.swift ios/Runner/DanmakuPictureInPicture.swift
+
       - name: Analyze iOS changes
         run: dart analyze --fatal-infos lib/utils/ios lib/common/widgets/ios_glass_surface.dart lib/utils/theme_utils.dart lib/pages/danmaku/controller.dart
 

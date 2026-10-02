@@ -343,7 +343,7 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
   }
   func pictureInPictureControllerIsPlaybackPaused(_ controller: AVPictureInPictureController) -> Bool { !playing }
   func pictureInPictureController(_ controller: AVPictureInPictureController,
-    skipByInterval interval: CMTime, completionHandler: @escaping () -> Void) {
+    skipByInterval interval: CMTime, completion completionHandler: @escaping () -> Void) {
     let target = min(max(0, (video?.currentTime().seconds ?? 0) + interval.seconds), max(0, duration - 0.1))
     seek(target) { [weak self] in self?.setPlaying(self?.playing ?? false); completionHandler() }
   }
