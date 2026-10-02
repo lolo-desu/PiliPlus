@@ -38,6 +38,9 @@ jobs:
       - name: Analyze iOS changes
         run: dart analyze --fatal-infos lib/utils/ios lib/common/widgets/ios_glass_surface.dart lib/utils/theme_utils.dart lib/pages/danmaku/controller.dart
 
+      - name: Test PiP comment synchronization and filtering
+        run: flutter test --no-pub test/ios_pip_comments_test.dart
+
       - name: Build iOS
         run: |
           flutter build ios --release --no-codesign --dart-define-from-file=pili_release.json --no-pub

@@ -25,6 +25,7 @@ final class LiquidGlassFactory: NSObject, FlutterPlatformViewFactory {
 
 private final class LiquidGlassView: NSObject, FlutterPlatformView {
   private let host: UIHostingController<GlassMaterial>
+  private var transparencyObserver: NSObjectProtocol?
   init(frame: CGRect, arguments: Any?) {
     let args = arguments as? [String: Any] ?? [:]
     host = UIHostingController(rootView: GlassMaterial(
@@ -35,6 +36,15 @@ private final class LiquidGlassView: NSObject, FlutterPlatformView {
     host.view.backgroundColor = .clear
     host.view.isUserInteractionEnabled = false
     host.overrideUserInterfaceStyle = (args["dark"] as? Bool ?? false) ? .dark : .light
+    let radius = CGFloat((args["radius"] as? NSNumber)?.doubleValue ?? 28)
+    let forcedOpaque = args["opaque"] as? Bool ?? false
+    transparencyObserver = NotificationCenter.default.addObserver(
+      forName: UIAccessibility.reduceTransparencyStatusDidChangeNotification,
+      object: nil, queue: .main) { [weak self] _ in
+        self?.host.rootView = GlassMaterial(radius: radius,
+          opaque: forcedOpaque || UIAccessibility.isReduceTransparencyEnabled)
+      }
   }
+  deinit { if let transparencyObserver { NotificationCenter.default.removeObserver(transparencyObserver) } }
   func view() -> UIView { host.view }
 }

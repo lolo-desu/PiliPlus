@@ -10,6 +10,7 @@ import 'package:PiliPlus/plugin/pl_player/utils/danmaku_options.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/danmaku_utils.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
+import 'package:PiliPlus/utils/ios/pip_comments.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:path/path.dart' as path;
 
@@ -112,26 +113,13 @@ class PlDanmakuController {
       final segment = DmUtils.calcSegment(progress);
       await Future.wait([queryDanmaku(segment), queryDanmaku(segment + 1)]);
     }
-    final block = DanmakuOptions.blockTypes;
-    return [
-      for (final bucket in _dmSegMap.values)
-        for (final e in bucket)
-          if (e.progress >= progress &&
-              e.progress < progress + 720000 &&
-              e.weight >= DanmakuOptions.danmakuWeight &&
-              (e.mode == 1 || e.mode == 4 || e.mode == 5 || e.mode == 6) &&
-              !(e.mode == 4
-                  ? block.contains(4)
-                  : e.mode == 5
-                  ? block.contains(5)
-                  : block.contains(2)))
-            <String, Object?>{
-              'time': e.progress / 1000,
-              'text': e.content,
-              'color': DanmakuOptions.blockColorful ? 0xFFFFFF : e.color,
-              'mode': e.mode,
-            },
-    ];
+    return pipCommentPackets(
+      _dmSegMap.values.expand((bucket) => bucket),
+      positionMs: progress,
+      blockedTypes: DanmakuOptions.blockTypes,
+      minimumWeight: DanmakuOptions.danmakuWeight,
+      blockColorful: DanmakuOptions.blockColorful,
+    );
   }
 
   bool _fileDmLoaded = false;

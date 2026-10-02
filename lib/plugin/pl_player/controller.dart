@@ -359,6 +359,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         'position': start.inMilliseconds / 1000,
         'duration': durationInMilliseconds / 1000,
         'speed': playbackSpeed,
+        'volume': Pref.playerVolume / 100,
         'playing': wasPlaying,
         'live': isLive,
         'aspect': (width ?? 16) / (height == null || height == 0 ? 9 : height!),
@@ -1239,6 +1240,10 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   // 还原默认速度
   double playSpeedDefault = Pref.playSpeedDefault;
   Future<void> setDefaultSpeed() async {
+    if (isNativePip) {
+      await setPlaybackSpeed(playSpeedDefault);
+      return;
+    }
     await _videoPlayerController?.setRate(playSpeedDefault);
     _playbackSpeed.value = playSpeedDefault;
   }

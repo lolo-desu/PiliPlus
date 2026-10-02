@@ -27,7 +27,6 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
   private var playing = true
   private var duration = 0.0
   private var live = false
-  private var frameNumber: Int64 = 0
   private var lastReported = -1.0
   private var prepared = false
   private var comments: [[String: Any]] = []
@@ -93,11 +92,14 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
     item.add(output)
     self.output = output
     video = AVPlayer(playerItem: item)
+    let volume = min(1, max(0, (args["volume"] as? NSNumber)?.floatValue ?? 1))
+    video?.volume = volume
     if let audioPath = args["audio"] as? String, !audioPath.isEmpty, let audioURL = mediaURL(audioPath) {
       video?.isMuted = true
       audio = AVPlayer(playerItem: AVPlayerItem(asset: AVURLAsset(url: audioURL,
         options: ["AVURLAssetHTTPHeaderFieldsKey": headers])))
     }
+    audio?.volume = volume
     do {
       try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
       try AVAudioSession.sharedInstance().setActive(true)
@@ -209,6 +211,8 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
     lastPosition = position
     if abs(position - lastReported) >= 0.25 {
       lastReported = position
+      if let timebase { CMTimebaseSetTime(timebase, time: CMTime(seconds: position, preferredTimescale: 600)) }
+      if playing { audio?.rate = video.timeControlStatus == .playing ? speed : 0 }
       channel.invokeMethod("position", arguments: ["position": position, "playing": playing])
       if let audio, playing, abs(audio.currentTime().seconds - position) > 0.35 {
         audio.seek(to: video.currentTime(), toleranceBefore: .zero, toleranceAfter: .zero)
@@ -219,8 +223,9 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
     if output.hasNewPixelBuffer(forItemTime: itemTime), let buffer = output.copyPixelBuffer(forItemTime: itemTime, itemTimeForDisplay: nil) {
       lastImage = CIImage(cvPixelBuffer: buffer)
     }
-    guard let image = lastImage, layer.isReadyForMoreMediaData else { return }
+    guard let image = lastImage else { return }
     if layer.status == .failed { layer.flush() }
+    guard layer.isReadyForMoreMediaData else { return }
     var destination: CVPixelBuffer?
     guard CVPixelBufferPoolCreatePixelBuffer(nil, pool, &destination) == kCVReturnSuccess,
       let destination else { return }
@@ -296,7 +301,7 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
 
   private func fail(_ message: String) {
     let result = pendingResult; pendingResult = nil
-    cleanup(report: false)
+    cleanup(report: result == nil)
     result?(FlutterError(code: "pip_failed", message: message, details: nil))
     channel.invokeMethod("error", arguments: message)
   }

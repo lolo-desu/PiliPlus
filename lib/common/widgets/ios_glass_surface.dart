@@ -14,6 +14,11 @@ class IosGlassSurface extends StatelessWidget {
         child: ExcludeSemantics(
           child: IgnorePointer(
             child: UiKitView(
+              key: ValueKey((
+                Theme.of(context).brightness,
+                MediaQuery.highContrastOf(context),
+                radius,
+              )),
               viewType: 'piliplus/liquid_glass',
               creationParams: {
                 'radius': radius,
