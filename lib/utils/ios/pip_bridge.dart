@@ -18,6 +18,10 @@ abstract final class IosPipBridge {
 
   static Future<void> dispose() async {
     onEvent = null;
-    await channel.invokeMethod<void>('dispose');
+    try {
+      await channel.invokeMethod<void>('dispose');
+    } on MissingPluginException {
+      // iOS versions below 15 have no native sample-buffer PiP implementation.
+    }
   }
 }

@@ -22,6 +22,7 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
   private var statusObservation: NSKeyValueObservation?
   private var audioObservation: NSKeyValueObservation?
   private var pendingResult: FlutterResult?
+  private var sessionID = UUID()
   private var initialPosition = 0.0
   private var speed: Float = 1
   private var playing = true
@@ -75,6 +76,8 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
       .flatMap({ $0.windows }).first(where: { $0.isKeyWindow }) else {
       result(FlutterError(code: "window", message: "未找到播放窗口", details: nil)); return
     }
+    sessionID = UUID()
+    let currentSessionID = sessionID
     pendingResult = result
     initialPosition = (args["position"] as? NSNumber)?.doubleValue ?? 0
     duration = (args["duration"] as? NSNumber)?.doubleValue ?? 0
@@ -149,7 +152,7 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
     }
     // Decode/network failures must return playback ownership to Flutter.
     DispatchQueue.main.asyncAfter(deadline: .now() + 20) { [weak self] in
-      if self?.pendingResult != nil { self?.fail("画中画启动超时，请尝试其他画质或编码") }
+      if self?.sessionID == currentSessionID && self?.pendingResult != nil { self?.fail("画中画启动超时，请尝试其他画质或编码") }
     }
   }
 
@@ -303,9 +306,10 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
     let result = pendingResult; pendingResult = nil
     cleanup(report: result == nil)
     result?(FlutterError(code: "pip_failed", message: message, details: nil))
-    channel.invokeMethod("error", arguments: message)
+    if result == nil { channel.invokeMethod("error", arguments: message) }
   }
   private func cleanup(report: Bool) {
+    sessionID = UUID()
     let position = video?.currentTime().seconds ?? initialPosition
     let wasPlaying = playing
     pendingResult?(FlutterError(code: "cancelled", message: "画中画已关闭", details: nil)); pendingResult = nil

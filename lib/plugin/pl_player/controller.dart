@@ -298,6 +298,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     }
     _startingNativePip = true;
     final wasPlaying = playerStatus.isPlaying;
+    final source = dataSource;
     final start = videoPlayerController!.state.position;
     try {
       IosPipBridge.initialize();
@@ -305,6 +306,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
           ? await pipDanmakuProvider?.call(start.inMilliseconds) ??
                 <Map<String, Object?>>[]
           : <Map<String, Object?>>[];
+      if (_playerCount == 0 || !identical(dataSource, source)) return;
       IosPipBridge.onEvent = (call) async {
         if (call.method == 'position' && isNativePip) {
           final args = Map<Object?, Object?>.from(call.arguments as Map);
@@ -334,15 +336,17 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
           if (args['playing'] == true) {
             await play();
           } else {
-            playerStatus.value = .paused;
+            await pause();
           }
         } else if (call.method == 'error') {
           SmartDialog.showToast(call.arguments.toString());
         }
       };
       // Pause mpv without releasing the audio session while native AVKit takes over.
-      await _videoPlayerController!.pause();
       isNativePip = true;
+      danmakuController?.pause();
+      await _videoPlayerController!.pause();
+      if (_playerCount == 0 || !identical(dataSource, source)) return;
       _nativePosition = start.inMilliseconds / 1000;
       _nativeDmSegment = start.inMilliseconds ~/ 360000;
       final sourceRect = pipSourceRect?.call();
@@ -354,8 +358,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
             sourceRect.width,
             sourceRect.height,
           ],
-        'video': dataSource.videoSource,
-        'audio': dataSource.audioSource,
+        'video': source.videoSource,
+        'audio': source.audioSource,
         'position': start.inMilliseconds / 1000,
         'duration': durationInMilliseconds / 1000,
         'speed': playbackSpeed,
@@ -370,9 +374,14 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         'area': DanmakuOptions.danmakuShowArea,
       });
     } catch (error) {
+      if (_playerCount == 0 || !identical(dataSource, source)) return;
       isNativePip = false;
       IosPipBridge.onEvent = null;
-      if (wasPlaying) await play();
+      if (wasPlaying) {
+        await play();
+      } else {
+        await pause();
+      }
       SmartDialog.showToast('画中画无法启动：$error');
     } finally {
       _startingNativePip = false;
@@ -1684,7 +1693,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     }
 
     _playerCount = 0;
-    if (Platform.isIOS) {
+    if (Platform.isIOS && (isNativePip || _startingNativePip)) {
       isNativePip = false;
       IosPipBridge.dispose();
     }
