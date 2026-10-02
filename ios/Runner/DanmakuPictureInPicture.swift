@@ -30,6 +30,7 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
   private var duration = 0.0
   private var live = false
   private var lastReported = -1.0
+  private var lastReportedPlaying: Bool?
   private var prepared = false
   private var comments: [[String: Any]] = []
   private var active: [(text: String, color: UIColor, mode: Int, start: Double, lane: Int)] = []
@@ -213,8 +214,9 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
       commentIndex = comments.firstIndex { ($0["time"] as? Double ?? 0) >= position } ?? comments.count
     }
     lastPosition = position
-    if abs(position - lastReported) >= 0.25 {
+    if abs(position - lastReported) >= 0.25 || lastReportedPlaying != playing {
       lastReported = position
+      lastReportedPlaying = playing
       if let timebase { CMTimebaseSetTime(timebase, time: CMTime(seconds: position, preferredTimescale: 600)) }
       if playing { audio?.rate = video.timeControlStatus == .playing ? speed : 0 }
       channel.invokeMethod("position", arguments: ["position": position, "playing": playing])
@@ -222,7 +224,7 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
         audio.seek(to: video.currentTime(), toleranceBefore: .zero, toleranceAfter: .zero)
       }
     }
-    if !live && duration > 0 && position >= duration - 0.1 { setPlaying(false) }
+    if playing && !live && duration > 0 && position >= duration - 0.1 { setPlaying(false) }
     let itemTime = output.itemTime(forHostTime: CACurrentMediaTime())
     if output.hasNewPixelBuffer(forItemTime: itemTime), let buffer = output.copyPixelBuffer(forItemTime: itemTime, itemTimeForDisplay: nil) {
       lastImage = CIImage(cvPixelBuffer: buffer)
@@ -320,7 +322,7 @@ final class DanmakuPictureInPicture: NSObject, AVPictureInPictureControllerDeleg
     timer?.invalidate(); timer = nil
     video?.pause(); audio?.pause(); video = nil; audio = nil; output = nil
     layer.flushAndRemoveImage(); layer.removeFromSuperlayer(); sourceView.removeFromSuperview()
-    pip = nil; pool = nil; timebase = nil; lastImage = nil; prepared = false; lastReported = -1; lastPosition = -1
+    pip = nil; pool = nil; timebase = nil; lastImage = nil; prepared = false; lastReported = -1; lastReportedPlaying = nil; lastPosition = -1
     active.removeAll(); comments.removeAll(); commentIndex = 0
     if report { channel.invokeMethod("stopped", arguments: ["position": position.isFinite ? position : initialPosition, "playing": wasPlaying]) }
   }
